@@ -1,0 +1,277 @@
+@import "tailwindcss";
+
+/* ============================================
+   Наша История — Custom Design System
+   Тёмная, интимная тема Midnight Blue
+   ============================================ */
+
+/* --- Custom Theme Configuration (Tailwind v4) --- */
+@theme {
+  --color-midnight: #0a0e1a;
+  --color-deep-night: #060a14;
+  --color-navy: #101830;
+  --color-navy-light: #1a2440;
+  --color-gold: #c9a84c;
+  --color-gold-light: #e8d08c;
+  --color-gold-dim: rgba(201, 168, 76, 0.15);
+  --color-wendys-red: #e2383f;
+  --color-wendys-red-warm: #c63035;
+  --color-wendys-glow: rgba(226, 56, 63, 0.2);
+  --color-text-primary: #f0ece4;
+  --color-text-secondary: #a8a0b8;
+  --color-text-muted: #6b6580;
+  --color-glass: rgba(16, 24, 48, 0.6);
+  --color-glass-border: rgba(201, 168, 76, 0.12);
+  --color-glass-hover: rgba(26, 36, 64, 0.8);
+
+  --font-heading: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-gold: pulse-gold 3s ease-in-out infinite;
+  --animate-glow: glow 4s ease-in-out infinite;
+  --animate-melt: melt 0.6s ease-in-out;
+  --animate-fade-up: fade-up 0.8s ease-out forwards;
+  --animate-shimmer: shimmer 3s linear infinite;
+  --animate-sparkle: sparkle 2s ease-in-out infinite;
+}
+
+/* --- Keyframe Animations --- */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 20px rgba(201, 168, 76, 0.15); }
+  50% { box-shadow: 0 0 40px rgba(201, 168, 76, 0.35), 0 0 60px rgba(201, 168, 76, 0.15); }
+}
+
+@keyframes glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes melt {
+  0% {
+    transform: translateY(-10px) scaleY(1.1);
+    opacity: 0;
+    filter: blur(2px);
+  }
+  50% {
+    transform: translateY(3px) scaleY(0.98);
+    filter: blur(0);
+  }
+  100% {
+    transform: translateY(0) scaleY(1);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes arc-pulse {
+  0%, 100% { stroke-dashoffset: 0; opacity: 0.6; }
+  50% { stroke-dashoffset: 20; opacity: 1; }
+}
+
+@keyframes particle-float {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(-100px) translateX(50px); opacity: 0; }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Global Styles --- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-deep-night);
+  color: var(--color-text-primary);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- Scrollbar Customization --- */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-deep-night);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(201, 168, 76, 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 168, 76, 0.5);
+}
+
+/* --- Glassmorphism Utility --- */
+.glass {
+  background: var(--color-glass);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border: 1px solid var(--color-glass-border);
+  border-radius: 20px;
+}
+
+.glass-hover:hover {
+  background: var(--color-glass-hover);
+  border-color: rgba(201, 168, 76, 0.25);
+  box-shadow: 0 8px 32px rgba(201, 168, 76, 0.08);
+}
+
+/* --- Gold Gradient Text --- */
+.text-gradient-gold {
+  background: linear-gradient(135deg, var(--color-gold), var(--color-gold-light), var(--color-gold));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 4s linear infinite;
+}
+
+/* --- Section visibility for scroll animations --- */
+.section-hidden {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+.section-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --- Timer digit melting effect --- */
+.timer-digit {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+.timer-digit.melting {
+  animation: melt 0.6s ease-in-out;
+}
+
+/* --- Particles Background --- */
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--color-gold);
+  border-radius: 50%;
+  opacity: 0;
+  animation: particle-float 8s linear infinite;
+}
+
+/* --- Map Arc Animation --- */
+.map-arc {
+  stroke-dasharray: 10 5;
+  animation: arc-pulse 3s ease-in-out infinite;
+}
+
+/* --- Video Play Button Pulse --- */
+.play-button-pulse {
+  animation: pulse-gold 2s ease-in-out infinite;
+}
+
+/* --- Card Hover Effects --- */
+.food-card {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.food-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(201, 168, 76, 0.1);
+}
+
+.future-card {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.future-card:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 16px 32px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(201, 168, 76, 0.08);
+}
+
+/* --- Hero Background Overlay --- */
+.hero-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(6, 10, 20, 0.3) 0%,
+    rgba(6, 10, 20, 0.7) 40%,
+    rgba(6, 10, 20, 0.95) 100%
+  );
+}
+
+/* --- Decorative Gold Line --- */
+.gold-line {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-gold-dim) 20%,
+    var(--color-gold) 50%,
+    var(--color-gold-dim) 80%,
+    transparent 100%
+  );
+}
+
+/* --- Navbar Animation --- */
+.navbar-slide {
+  animation: slide-down 0.5s ease-out;
+}
+
+/* --- Responsive Image Container --- */
+.img-glow {
+  position: relative;
+}
+.img-glow::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(201, 168, 76, 0.2), transparent, rgba(226, 56, 63, 0.15));
+  z-index: -1;
+  filter: blur(12px);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.img-glow:hover::after {
+  opacity: 1;
+}
