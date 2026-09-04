@@ -147,7 +147,7 @@ function MusicPlayer() {
 
   const videoId = 'd27gTrPPAyk';
 
-  // Глобальная функция для вызова синхронно из WelcomeScreen
+  // Глобальная функция для вызова синхронно из WelcomeScreen и других кнопок
   useEffect(() => {
     window.startMusic = () => {
       if (playerRef.current && readyRef.current && typeof playerRef.current.playVideo === 'function') {
@@ -155,8 +155,18 @@ function MusicPlayer() {
         playerRef.current.playVideo();
       }
     };
+    window.toggleMusic = () => {
+      if (playerRef.current && readyRef.current) {
+        if (playerRef.current.getPlayerState() === 1) {
+          playerRef.current.pauseVideo();
+        } else {
+          playerRef.current.playVideo();
+        }
+      }
+    };
     return () => {
       delete window.startMusic;
+      delete window.toggleMusic;
     };
   }, []);
 
@@ -191,8 +201,14 @@ function MusicPlayer() {
             readyRef.current = true;
           },
           onStateChange: (event) => {
-            if (event.data === 1) setIsPlaying(true);
-            if (event.data === 2) setIsPlaying(false);
+            if (event.data === 1) {
+              setIsPlaying(true);
+              window.dispatchEvent(new CustomEvent('music-state', { detail: true }));
+            }
+            if (event.data === 2) {
+              setIsPlaying(false);
+              window.dispatchEvent(new CustomEvent('music-state', { detail: false }));
+            }
           }
         },
       });
@@ -343,6 +359,13 @@ function Navbar() {
 // ─── Компонент: Hero Section ──────────────────────────────
 function HeroSection() {
   const [ref, isVisible] = useInView();
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+
+  useEffect(() => {
+    const handleMusic = (e) => setIsMusicPlaying(e.detail);
+    window.addEventListener('music-state', handleMusic);
+    return () => window.removeEventListener('music-state', handleMusic);
+  }, []);
 
   return (
     <section
@@ -387,11 +410,26 @@ function HeroSection() {
           Твои Глаза, Твоя Улыбка
         </p>
 
-        <p className="text-text-secondary text-sm sm:text-base font-light max-w-xl mx-auto mb-10 leading-relaxed">
+        <p className="text-text-secondary text-sm sm:text-base font-light max-w-xl mx-auto mb-8 leading-relaxed">
           От поющих фонтанов Еревана до России.
           <br />
           Где началась наша история.
         </p>
+
+        {/* Инлайн-кнопка Музыки */}
+        <button
+          onClick={() => window.toggleMusic && window.toggleMusic()}
+          className="inline-flex items-center justify-center gap-3 px-8 py-3 mb-12 rounded-full glass border border-gold/30 hover:bg-glass-hover hover:border-gold/50 transition-all duration-300 shadow-[0_0_20px_rgba(201,168,76,0.1)] hover:shadow-[0_0_30px_rgba(201,168,76,0.2)] group"
+        >
+          {isMusicPlaying ? (
+            <Volume2 className="w-5 h-5 text-gold animate-pulse" />
+          ) : (
+            <VolumeX className="w-5 h-5 text-text-muted group-hover:text-gold transition-colors" />
+          )}
+          <span className="text-sm font-body tracking-[0.15em] text-text-secondary group-hover:text-gold/90 transition-colors uppercase">
+            {isMusicPlaying ? 'Стинг играет' : 'Включить Стинга'}
+          </span>
+        </button>
 
         {/* Стрелка прокрутки */}
         <a href="#timer" className="inline-block animate-float">
@@ -420,9 +458,9 @@ function TimerDigit({ value, label, prevValue }) {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="glass p-4 sm:p-6 rounded-2xl min-w-[70px] sm:min-w-[90px] md:min-w-[110px] animate-pulse-gold">
+      <div className="glass px-4 py-3 sm:px-6 sm:py-5 rounded-2xl min-w-[75px] sm:min-w-[100px] md:min-w-[120px] flex items-center justify-center animate-pulse-gold">
         <span
-          className={`font-heading text-3xl sm:text-5xl md:text-6xl font-light text-gradient-gold block text-center timer-digit ${
+          className={`font-heading text-4xl sm:text-6xl md:text-7xl font-light leading-none text-gradient-gold block text-center timer-digit ${
             isMelting ? 'melting' : ''
           }`}
         >
