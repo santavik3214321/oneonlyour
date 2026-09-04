@@ -124,8 +124,11 @@ function WelcomeScreen({ onEnter }) {
 
       <div className="text-center animate-fade-up px-6">
         <Heart className="w-12 h-12 text-wendys-red mx-auto mb-8 animate-pulse drop-shadow-[0_0_15px_rgba(226,56,63,0.5)]" fill="currentColor" />
-        <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl text-text-primary font-light mb-12 leading-tight max-w-2xl mx-auto">
-          У меня есть кое-что для тебя <br /><span className="text-gradient-gold font-medium">моя Принцесса...</span>
+        <h1 className="font-heading text-2xl sm:text-3xl md:text-4xl text-text-primary font-light mb-12 leading-tight max-w-3xl mx-auto px-4">
+          Я знал что ты вернешься сюда еще раз моя принцесса{' '}
+          <span className="text-gradient-gold font-medium block mt-2 text-xl sm:text-2xl">
+            поэтому песня тут уже будет другим 🥰♥️
+          </span>
         </h1>
         <button
           onClick={(e) => { e.stopPropagation(); handleClick(); }}
@@ -145,7 +148,7 @@ function MusicPlayer() {
   const containerRef = useRef(null);
   const readyRef = useRef(false);
 
-  const videoId = 'd27gTrPPAyk';
+  const videoId = 'jtoncUzV6nA';
 
   // Глобальная функция для вызова синхронно из WelcomeScreen и других кнопок
   useEffect(() => {
@@ -251,7 +254,7 @@ function MusicPlayer() {
                    border border-gold/20 hover:border-gold/40
                    shadow-lg shadow-black/20"
         aria-label={isPlaying ? 'Выключить музыку' : 'Включить музыку'}
-        title={isPlaying ? 'Sting — Englishman in New York ♪' : 'Включить музыку'}
+        title={isPlaying ? 'Reamonn — Tonight ♪' : 'Включить музыку'}
       >
         {isPlaying ? (
           <Volume2 className="w-5 h-5 text-gold animate-pulse" />
@@ -265,7 +268,7 @@ function MusicPlayer() {
         <div className="fixed bottom-6 right-20 z-50 glass px-4 py-2 rounded-full
                         border border-gold/10 animate-fade-up">
           <p className="text-[11px] text-gold/70 font-body tracking-wider">
-            ♪ Sting — Englishman in New York
+            ♪ Reamonn — Tonight
           </p>
         </div>
       )}
@@ -427,7 +430,7 @@ function HeroSection() {
             <VolumeX className="w-5 h-5 text-text-muted group-hover:text-gold transition-colors" />
           )}
           <span className="text-sm font-body tracking-[0.15em] text-text-secondary group-hover:text-gold/90 transition-colors uppercase">
-            {isMusicPlaying ? 'Стинг играет' : 'Включить Стинга'}
+            {isMusicPlaying ? 'Reamonn играет' : 'Включить Reamonn'}
           </span>
         </button>
 
