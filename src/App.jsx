@@ -98,6 +98,10 @@ function WelcomeScreen({ onEnter }) {
   const [isFading, setIsFading] = useState(false);
 
   const handleClick = () => {
+    // В iOS нужно вызывать play() строго синхронно внутри обработчика клика
+    if (window.startMusic) {
+      window.startMusic();
+    }
     setIsFading(true);
     setTimeout(() => {
       onEnter();
@@ -135,7 +139,7 @@ function WelcomeScreen({ onEnter }) {
 }
 
 // ─── Компонент: Музыкальный плеер (Sting) ──────────────────
-function MusicPlayer({ playSignal }) {
+function MusicPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const playerRef = useRef(null);
   const containerRef = useRef(null);
@@ -143,13 +147,18 @@ function MusicPlayer({ playSignal }) {
 
   const videoId = 'd27gTrPPAyk';
 
-  // Эффект для запуска музыки по сигналу (когда нажали "Открыть")
+  // Глобальная функция для вызова синхронно из WelcomeScreen
   useEffect(() => {
-    if (playSignal && playerRef.current && readyRef.current && typeof playerRef.current.playVideo === 'function') {
-      playerRef.current.setVolume(70);
-      playerRef.current.playVideo();
-    }
-  }, [playSignal]);
+    window.startMusic = () => {
+      if (playerRef.current && readyRef.current && typeof playerRef.current.playVideo === 'function') {
+        playerRef.current.setVolume(70);
+        playerRef.current.playVideo();
+      }
+    };
+    return () => {
+      delete window.startMusic;
+    };
+  }, []);
 
   // Загружаем YouTube IFrame API и создаём плеер
   useEffect(() => {
@@ -180,10 +189,6 @@ function MusicPlayer({ playSignal }) {
         events: {
           onReady: (event) => {
             readyRef.current = true;
-            if (playSignal) {
-              event.target.setVolume(70);
-              event.target.playVideo();
-            }
           },
           onStateChange: (event) => {
             if (event.data === 1) setIsPlaying(true);
@@ -1039,7 +1044,7 @@ export default function App() {
       <Particles />
 
       {/* Музыкальный плеер */}
-      <MusicPlayer playSignal={hasEntered} />
+      <MusicPlayer />
 
       {/* Навигация */}
       <Navbar />
