@@ -93,7 +93,105 @@ function Particles() {
   );
 }
 
-// ─── Компонент: Стартовый экран (Обход блокировки аудио) ──────
+// ─── Компонент: Анимация Салютов (Canvas) ──────────────────
+function CanvasFireworks() {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+    let particles = [];
+    
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.size = Math.random() * 2 + 0.5;
+        this.alpha = 1;
+        this.decay = Math.random() * 0.015 + 0.01;
+        const velocity = Math.random() * 4 + 2;
+        const angle = Math.random() * Math.PI * 2;
+        this.vx = Math.cos(angle) * velocity;
+        this.vy = Math.sin(angle) * velocity;
+        this.gravity = 0.04;
+      }
+      update() {
+        this.vy += this.gravity;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.alpha -= this.decay;
+      }
+      draw(ctx) {
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${this.color}, ${this.alpha})`;
+        ctx.fill();
+      }
+    }
+
+    const explode = (x, y) => {
+      // Цвета: Золотой, Нежно-розовый, Насыщенно-красный
+      const colors = ['255, 215, 0', '255, 105, 180', '220, 20, 60', '255, 230, 150'];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const particleCount = 60 + Math.random() * 40;
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle(x, y, color));
+      }
+    };
+
+    let launchTimer = 0;
+    // Первый залп при загрузке
+    setTimeout(() => explode(canvas.width / 2, canvas.height / 3), 300);
+    
+    const loop = () => {
+      // Создаем эффект плавного затухания шлейфа
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      launchTimer++;
+      // Случайные запуски салютов
+      if (launchTimer > 70 + Math.random() * 60) {
+        explode(
+          Math.random() * (canvas.width * 0.8) + (canvas.width * 0.1),
+          Math.random() * (canvas.height * 0.4) + (canvas.height * 0.05)
+        );
+        launchTimer = 0;
+      }
+      
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.update();
+        p.draw(ctx);
+        if (p.alpha <= 0) particles.splice(i, 1);
+      }
+      
+      animationFrameId = requestAnimationFrame(loop);
+    };
+    
+    loop();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none opacity-60 z-0" />;
+}
+
+// ─── Компонент: Экран приветствия ────────────────────────
 function WelcomeScreen({ onEnter }) {
   const [isFading, setIsFading] = useState(false);
 
@@ -115,25 +213,31 @@ function WelcomeScreen({ onEnter }) {
       }`}
       onClick={handleClick}
     >
+      {/* Фоновый дизайн: Салюты */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <CanvasFireworks />
+        {/* Градиенты для затемнения, чтобы текст идеально читался */}
+        <div className="absolute inset-0 bg-gradient-to-t from-deep-night via-deep-night/50 to-deep-night/20" />
+      </div>
+
       {/* Инициалы SV сверху */}
-      <div className="absolute top-12 left-0 right-0 text-center animate-fade-down">
+      <div className="absolute top-12 left-0 right-0 text-center animate-fade-down z-10 pointer-events-none">
         <span className="font-heading text-4xl sm:text-5xl text-gold/80 italic font-light tracking-[0.15em] drop-shadow-[0_0_10px_rgba(201,168,76,0.3)]">
           S<span className="text-wendys-red/90 drop-shadow-[0_0_10px_rgba(226,56,63,0.3)]">V</span>
         </span>
       </div>
 
-      <div className="text-center animate-fade-up px-6">
+      <div className="text-center animate-fade-up px-6 relative z-10">
         <Heart className="w-12 h-12 text-wendys-red mx-auto mb-8 animate-pulse drop-shadow-[0_0_15px_rgba(226,56,63,0.5)]" fill="currentColor" />
         <h1 className="font-heading text-2xl sm:text-3xl md:text-4xl text-text-primary font-light mb-12 leading-tight max-w-3xl mx-auto px-4">
-          вот я знааал)) <br />
-          ты опять здесь МОЯ ПРИНЦЕССА♥️♥️ <br />
+          Я тут подумал... сколько бы километров нас ни разделяло сейчас, <br />
           <span className="text-gradient-gold font-medium block mt-2 text-xl sm:text-2xl">
-            и теперь тут уже звук и кадры Поющих фонтанов Еревана♥️
+            наше завтра точно того стоит. Улыбнись, я очень скучаю ♥️✈️
           </span>
         </h1>
         <button
           onClick={(e) => { e.stopPropagation(); handleClick(); }}
-          className="px-10 py-4 rounded-full glass border border-gold/30 text-gold hover:bg-gold/10 hover:border-gold/60 transition-all duration-500 font-body tracking-[0.2em] uppercase text-sm shadow-[0_0_20px_rgba(201,168,76,0.1)] hover:shadow-[0_0_30px_rgba(201,168,76,0.3)]"
+          className="px-10 py-4 rounded-full glass border border-gold/30 text-gold hover:bg-gold/10 hover:border-gold/60 transition-all duration-500 font-body tracking-[0.2em] uppercase text-sm shadow-[0_0_20px_rgba(201,168,76,0.1)] hover:shadow-[0_0_30px_rgba(201,168,76,0.3)] relative z-20"
         >
           Открыть
         </button>
@@ -149,7 +253,7 @@ function MusicPlayer() {
   const containerRef = useRef(null);
   const readyRef = useRef(false);
 
-  const videoId = 'jBUBiB4-efI';
+  const videoId = 'u910kj9xYSE';
 
   // Глобальная функция для вызова синхронно из WelcomeScreen и других кнопок
   useEffect(() => {
@@ -199,6 +303,7 @@ function MusicPlayer() {
           showinfo: 0,
           rel: 0,
           modestbranding: 1,
+          start: 4,
         },
         events: {
           onReady: (event) => {
@@ -255,7 +360,7 @@ function MusicPlayer() {
                    border border-gold/20 hover:border-gold/40
                    shadow-lg shadow-black/20"
         aria-label={isPlaying ? 'Выключить музыку' : 'Включить музыку'}
-        title={isPlaying ? 'Звук Поющих Фонтанов Еревана ♪' : 'Включить звук'}
+        title={isPlaying ? 'Frank Sinatra — Fly Me To The Moon 🌙' : 'Включить музыку'}
       >
         {isPlaying ? (
           <Volume2 className="w-5 h-5 text-gold animate-pulse" />
@@ -269,7 +374,7 @@ function MusicPlayer() {
         <div className="fixed bottom-6 right-20 z-50 glass px-4 py-2 rounded-full
                         border border-gold/10 animate-fade-up">
           <p className="text-[11px] text-gold/70 font-body tracking-wider">
-            ♪ Звук Поющих Фонтанов Еревана
+            ♪ Frank Sinatra — Fly Me To The Moon
           </p>
         </div>
       )}
@@ -370,20 +475,20 @@ function BackgroundVideo() {
   useEffect(() => {
     const initBgPlayer = () => {
       playerRef.current = new window.YT.Player(containerId, {
-        videoId: 'jBUBiB4-efI',
+        videoId: 'qTvL_zZK1u0',
         playerVars: {
           autoplay: 1,
           mute: 1, // Обязательно без звука
           controls: 0,
-          showinfo: 0, // Устарело, но оставляем на всякий
+          showinfo: 0, 
           rel: 0,
           modestbranding: 1,
           playsinline: 1,
-          start: 11,
-          end: 230,
           disablekb: 1,
           fs: 0,
-          iv_load_policy: 3, // Скрывает аннотации
+          iv_load_policy: 3, 
+          loop: 1,
+          playlist: 'qTvL_zZK1u0'
         },
         events: {
           onReady: (event) => {
@@ -405,7 +510,6 @@ function BackgroundVideo() {
               if (event.data === window.YT.PlayerState.PAUSED) {
                 event.target.playVideo();
               } else {
-                event.target.seekTo(11);
                 event.target.playVideo();
               }
             }
@@ -518,7 +622,7 @@ function HeroSection() {
             <VolumeX className="w-5 h-5 text-text-muted group-hover:text-gold transition-colors" />
           )}
           <span className="text-sm font-body tracking-[0.15em] text-text-secondary group-hover:text-gold/90 transition-colors uppercase">
-            {isMusicPlaying ? 'Фонтаны поют' : 'Включить звук фонтанов'}
+            {isMusicPlaying ? 'Синатра поет' : 'Включить Синатру'}
           </span>
         </button>
 
