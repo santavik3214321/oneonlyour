@@ -467,90 +467,16 @@ function Navbar() {
 
 // ─── Компонент: Фоновое видео для Hero Section ──────────────
 function BackgroundVideo() {
-  const containerId = 'yt-hero-bg';
-  const playerRef = useRef(null);
-  const timeoutRef = useRef(null);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-
-  useEffect(() => {
-    const initBgPlayer = () => {
-      playerRef.current = new window.YT.Player(containerId, {
-        videoId: 'mWsMj636fH4',
-        playerVars: {
-          autoplay: 1,
-          mute: 1, // Обязательно без звука
-          controls: 0,
-          showinfo: 0, 
-          rel: 0,
-          modestbranding: 1,
-          playsinline: 1,
-          disablekb: 1,
-          fs: 0,
-          iv_load_policy: 3, 
-          loop: 1,
-          playlist: 'mWsMj636fH4'
-        },
-        events: {
-          onReady: (event) => {
-            event.target.playVideo();
-          },
-          onStateChange: (event) => {
-            if (event.data === window.YT.PlayerState.PLAYING) {
-              // Ждем 800мс перед тем как показать видео, чтобы ютуб успел спрятать свои надписи и кнопку
-              timeoutRef.current = setTimeout(() => {
-                setIsVideoPlaying(true);
-              }, 800);
-            } else {
-              if (timeoutRef.current) clearTimeout(timeoutRef.current);
-              setIsVideoPlaying(false);
-            }
-            
-            // Обработка конца отрезка или паузы (на iOS)
-            if (event.data === window.YT.PlayerState.ENDED || event.data === window.YT.PlayerState.PAUSED) {
-              if (event.data === window.YT.PlayerState.PAUSED) {
-                event.target.playVideo();
-              } else {
-                event.target.playVideo();
-              }
-            }
-          }
-        }
-      });
-    };
-
-    if (window.YT && window.YT.Player) {
-      initBgPlayer();
-    } else {
-      const interval = setInterval(() => {
-        if (window.YT && window.YT.Player) {
-          clearInterval(interval);
-          initBgPlayer();
-        }
-      }, 500);
-      return () => clearInterval(interval);
-    }
-
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (playerRef.current && playerRef.current.destroy) {
-        playerRef.current.destroy();
-      }
-    };
-  }, []);
-
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      {/* 
-        Мы применяем scale-[1.35], чтобы физически вытолкнуть верхнюю панель ютуба 
-        (с названием канала) и нижнюю панель за пределы видимого экрана! 
-      */}
-      <div 
-        className={`absolute top-1/2 left-1/2 w-[100vw] h-[56.25vw] min-h-[100vh] min-w-[177.77vh] -translate-x-1/2 -translate-y-1/2 scale-[1.35] sm:scale-[1.25] md:scale-[1.15] transition-opacity duration-1000 ${
-          isVideoPlaying ? 'opacity-60' : 'opacity-0'
-        }`}
-      >
-        <div id={containerId} className="w-full h-full pointer-events-none" />
-      </div>
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 bg-deep-night">
+      <video
+        src="/videos/bg_video.mp4"
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="w-full h-full object-cover opacity-60"
+      />
     </div>
   );
 }
