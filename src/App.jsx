@@ -475,7 +475,7 @@ function BackgroundVideo() {
   useEffect(() => {
     const initBgPlayer = () => {
       playerRef.current = new window.YT.Player(containerId, {
-        videoId: 'qTvL_zZK1u0',
+        videoId: 'mWsMj636fH4',
         playerVars: {
           autoplay: 1,
           mute: 1, // Обязательно без звука
@@ -488,7 +488,7 @@ function BackgroundVideo() {
           fs: 0,
           iv_load_policy: 3, 
           loop: 1,
-          playlist: 'qTvL_zZK1u0'
+          playlist: 'mWsMj636fH4'
         },
         events: {
           onReady: (event) => {
