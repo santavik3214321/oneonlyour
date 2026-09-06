@@ -125,9 +125,10 @@ function WelcomeScreen({ onEnter }) {
       <div className="text-center animate-fade-up px-6">
         <Heart className="w-12 h-12 text-wendys-red mx-auto mb-8 animate-pulse drop-shadow-[0_0_15px_rgba(226,56,63,0.5)]" fill="currentColor" />
         <h1 className="font-heading text-2xl sm:text-3xl md:text-4xl text-text-primary font-light mb-12 leading-tight max-w-3xl mx-auto px-4">
-          Я знал что ты вернешься сюда еще раз моя принцесса{' '}
+          вот я знааал)) <br />
+          ты опять здесь МОЯ ПРИНЦЕССА♥️♥️ <br />
           <span className="text-gradient-gold font-medium block mt-2 text-xl sm:text-2xl">
-            поэтому песня тут уже будет другим 🥰♥️
+            и теперь тут уже звук и кадры Поющих фонтанов Еревана♥️
           </span>
         </h1>
         <button
@@ -148,7 +149,7 @@ function MusicPlayer() {
   const containerRef = useRef(null);
   const readyRef = useRef(false);
 
-  const videoId = 'jtoncUzV6nA';
+  const videoId = 'jBUBiB4-efI';
 
   // Глобальная функция для вызова синхронно из WelcomeScreen и других кнопок
   useEffect(() => {
@@ -254,7 +255,7 @@ function MusicPlayer() {
                    border border-gold/20 hover:border-gold/40
                    shadow-lg shadow-black/20"
         aria-label={isPlaying ? 'Выключить музыку' : 'Включить музыку'}
-        title={isPlaying ? 'Reamonn — Tonight ♪' : 'Включить музыку'}
+        title={isPlaying ? 'Звук Поющих Фонтанов Еревана ♪' : 'Включить звук'}
       >
         {isPlaying ? (
           <Volume2 className="w-5 h-5 text-gold animate-pulse" />
@@ -268,7 +269,7 @@ function MusicPlayer() {
         <div className="fixed bottom-6 right-20 z-50 glass px-4 py-2 rounded-full
                         border border-gold/10 animate-fade-up">
           <p className="text-[11px] text-gold/70 font-body tracking-wider">
-            ♪ Reamonn — Tonight
+            ♪ Звук Поющих Фонтанов Еревана
           </p>
         </div>
       )}
@@ -359,6 +360,97 @@ function Navbar() {
   );
 }
 
+// ─── Компонент: Фоновое видео для Hero Section ──────────────
+function BackgroundVideo() {
+  const containerId = 'yt-hero-bg';
+  const playerRef = useRef(null);
+  const timeoutRef = useRef(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+
+  useEffect(() => {
+    const initBgPlayer = () => {
+      playerRef.current = new window.YT.Player(containerId, {
+        videoId: 'jBUBiB4-efI',
+        playerVars: {
+          autoplay: 1,
+          mute: 1, // Обязательно без звука
+          controls: 0,
+          showinfo: 0, // Устарело, но оставляем на всякий
+          rel: 0,
+          modestbranding: 1,
+          playsinline: 1,
+          start: 11,
+          end: 230,
+          disablekb: 1,
+          fs: 0,
+          iv_load_policy: 3, // Скрывает аннотации
+        },
+        events: {
+          onReady: (event) => {
+            event.target.playVideo();
+          },
+          onStateChange: (event) => {
+            if (event.data === window.YT.PlayerState.PLAYING) {
+              // Ждем 800мс перед тем как показать видео, чтобы ютуб успел спрятать свои надписи и кнопку
+              timeoutRef.current = setTimeout(() => {
+                setIsVideoPlaying(true);
+              }, 800);
+            } else {
+              if (timeoutRef.current) clearTimeout(timeoutRef.current);
+              setIsVideoPlaying(false);
+            }
+            
+            // Обработка конца отрезка или паузы (на iOS)
+            if (event.data === window.YT.PlayerState.ENDED || event.data === window.YT.PlayerState.PAUSED) {
+              if (event.data === window.YT.PlayerState.PAUSED) {
+                event.target.playVideo();
+              } else {
+                event.target.seekTo(11);
+                event.target.playVideo();
+              }
+            }
+          }
+        }
+      });
+    };
+
+    if (window.YT && window.YT.Player) {
+      initBgPlayer();
+    } else {
+      const interval = setInterval(() => {
+        if (window.YT && window.YT.Player) {
+          clearInterval(interval);
+          initBgPlayer();
+        }
+      }, 500);
+      return () => clearInterval(interval);
+    }
+
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (playerRef.current && playerRef.current.destroy) {
+        playerRef.current.destroy();
+      }
+    };
+  }, []);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      {/* 
+        Мы применяем scale-[1.35], чтобы физически вытолкнуть верхнюю панель ютуба 
+        (с названием канала) и нижнюю панель за пределы видимого экрана! 
+      */}
+      <div 
+        className={`absolute top-1/2 left-1/2 w-[100vw] h-[56.25vw] min-h-[100vh] min-w-[177.77vh] -translate-x-1/2 -translate-y-1/2 scale-[1.35] sm:scale-[1.25] md:scale-[1.15] transition-opacity duration-1000 ${
+          isVideoPlaying ? 'opacity-60' : 'opacity-0'
+        }`}
+      >
+        <div id={containerId} className="w-full h-full pointer-events-none" />
+      </div>
+    </div>
+  );
+}
+
 // ─── Компонент: Hero Section ──────────────────────────────
 function HeroSection() {
   const [ref, isVisible] = useInView();
@@ -376,14 +468,10 @@ function HeroSection() {
       ref={ref}
       className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
     >
-      {/* Фоновое изображение */}
-      <div className="absolute inset-0">
-        <img
-          src="/images/yerevan_fountains.png"
-          alt="Поющие фонтаны Еревана"
-          className="w-full h-full object-cover"
-        />
-        <div className="hero-overlay absolute inset-0" />
+      {/* Фоновое видео */}
+      <div className="absolute inset-0 bg-deep-night">
+        <BackgroundVideo />
+        <div className="hero-overlay absolute inset-0 z-10" />
       </div>
 
       {/* Контент */}
@@ -430,7 +518,7 @@ function HeroSection() {
             <VolumeX className="w-5 h-5 text-text-muted group-hover:text-gold transition-colors" />
           )}
           <span className="text-sm font-body tracking-[0.15em] text-text-secondary group-hover:text-gold/90 transition-colors uppercase">
-            {isMusicPlaying ? 'Reamonn играет' : 'Включить Reamonn'}
+            {isMusicPlaying ? 'Фонтаны поют' : 'Включить звук фонтанов'}
           </span>
         </button>
 
