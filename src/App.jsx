@@ -169,7 +169,7 @@ function Step2({ onNext }) {
             key={phase + ans.type} // Меняем ключ, чтобы анимации не пересекались при смене фазы
             onClick={() => handleAnswer(i, ans.type)}
             className={`glass-btn p-5 rounded-2xl text-left pl-6 transition-all text-gray-600 font-medium text-lg shadow-sm md:hover:shadow-md active:scale-[0.98] ${
-              errorIndex === i ? 'animate-shake-soft border-rose-300 text-rose-500 bg-rose-50' : 'active:bg-rose-50'
+              errorIndex === i ? 'animate-shake-soft selected-choice text-rose-500' : 'active:bg-rose-50'
             }`}
           >
             {ans.text}
@@ -308,7 +308,7 @@ function Step4({ onNext }) {
             key={item.id}
             onClick={() => handleAnswer(i, item.correct)}
             className={`glass-btn p-4 rounded-3xl flex flex-col items-center justify-center gap-3 transition-all duration-300 shadow-sm md:hover:shadow-md active:scale-95 ${
-              errorIndex === i ? 'animate-shake-soft border-rose-300 bg-rose-50' : 'active:bg-rose-50'
+              errorIndex === i ? 'animate-shake-soft selected-choice' : 'active:bg-rose-50'
             }`}
           >
             <img src={item.img} alt={item.name} className="w-24 h-24 object-contain drop-shadow-md" />
@@ -433,7 +433,7 @@ function Step5({ onNext, pauseMusic }) {
             key={i}
             onClick={() => handleAnswer(i, ans.correct)}
             className={`glass-btn p-5 rounded-2xl flex items-center justify-center gap-4 transition-all text-gray-600 font-medium text-lg shadow-sm md:hover:shadow-md active:scale-[0.98] ${
-              errorIndex === i ? 'animate-shake-soft border-rose-300 text-rose-500 bg-rose-50' : 'active:bg-rose-50'
+              errorIndex === i ? 'animate-shake-soft selected-choice text-rose-500' : 'active:bg-rose-50'
             }`}
           >
             <span className="text-rose-400 drop-shadow-sm">{ans.icon}</span>
@@ -478,8 +478,8 @@ function Step6({ onNext }) {
       <div className="grid grid-cols-2 gap-6 max-w-lg w-full mx-auto mb-12">
         <button
           onClick={() => toggleSelect('cascade')}
-          className={`glass-btn p-4 rounded-3xl flex flex-col items-center gap-4 transition-all duration-300 active:scale-95 ${
-            selected.includes('cascade') ? 'border-rose-300 bg-rose-50 shadow-inner' : 'active:bg-rose-50'
+          className={`glass-btn p-4 rounded-3xl flex flex-col items-center gap-4 transition-all duration-300 ${
+            selected.includes('cascade') ? 'selected-choice' : ''
           }`}
         >
           <img src="/images/cascade.png" alt="Закаты на Каскаде" className="w-full aspect-square object-cover rounded-2xl shadow-sm border border-white/50" />
@@ -488,8 +488,8 @@ function Step6({ onNext }) {
 
         <button
           onClick={() => toggleSelect('ropeway')}
-          className={`glass-btn p-4 rounded-3xl flex flex-col items-center gap-4 transition-all duration-300 active:scale-95 ${
-            selected.includes('ropeway') ? 'border-rose-300 bg-rose-50 shadow-inner' : 'active:bg-rose-50'
+          className={`glass-btn p-4 rounded-3xl flex flex-col items-center gap-4 transition-all duration-300 ${
+            selected.includes('ropeway') ? 'selected-choice' : ''
           }`}
         >
           <img src="/images/ropeway.png" alt="Канатка в Цахкадзоре" className="w-full aspect-square object-cover rounded-2xl shadow-sm border border-white/50" />
@@ -532,9 +532,7 @@ function Step8() {
 
   return (
     <div className="quest-container animate-blur-fade text-center">
-      <h2 className="font-heading text-5xl md:text-7xl font-medium mb-16 text-gradient-rose drop-shadow-sm">
-        Я люблю Вику
-      </h2>
+
       
       {!opened ? (
         <div className="cursor-pointer group mt-10" onClick={() => setOpened(true)}>
