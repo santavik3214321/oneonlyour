@@ -168,8 +168,8 @@ function Step2({ onNext }) {
           <button
             key={phase + ans.type} // Меняем ключ, чтобы анимации не пересекались при смене фазы
             onClick={() => handleAnswer(i, ans.type)}
-            className={`glass-btn p-5 rounded-2xl text-left pl-6 transition-all text-gray-600 font-medium text-lg shadow-sm hover:shadow-md ${
-              errorIndex === i ? 'animate-shake-soft border-rose-300 text-rose-500 bg-rose-50' : ''
+            className={`glass-btn p-5 rounded-2xl text-left pl-6 transition-all text-gray-600 font-medium text-lg shadow-sm md:hover:shadow-md active:scale-[0.98] ${
+              errorIndex === i ? 'animate-shake-soft border-rose-300 text-rose-500 bg-rose-50' : 'active:bg-rose-50'
             }`}
           >
             {ans.text}
@@ -237,16 +237,16 @@ function Step3({ onNext }) {
         Удерживай кнопку, чтобы наш самолет пролетел эти 3 700 км... Знаешь, что сильнее любого расстояния? Наша любовь.
       </p>
       
-      <div className="relative w-full max-w-2xl mx-auto mb-10 bg-white/40 rounded-[2rem] p-6 shadow-sm border border-white/80 backdrop-blur-md">
-        <svg viewBox="0 0 900 420" className="w-full h-auto">
-          <path d="M290,250 Q490,40 700,145" fill="none" stroke="rgba(244,143,177,0.3)" strokeWidth="4" strokeLinecap="round" strokeDasharray="12 12" />
-          <path d="M290,250 Q490,40 700,145" fill="none" stroke="#f48fb1" strokeWidth="6" strokeLinecap="round" pathLength="100" strokeDasharray="100" strokeDashoffset={100 - progress} className="transition-all duration-75 ease-linear" />
-          <circle cx="290" cy="250" r="10" fill="rgba(244,143,177,0.4)" className="animate-breathe" />
-          <circle cx="290" cy="250" r="5" fill="#f48fb1" />
-          <text x="290" y="280" textAnchor="middle" fill="#5a4b56" fontSize="18" fontFamily="Inter" fontWeight="600">Ереван</text>
-          <circle cx="700" cy="145" r="10" fill="rgba(255,182,193,0.4)" className="animate-breathe" />
-          <circle cx="700" cy="145" r="5" fill="#ffb6c1" />
-          <text x="700" y="175" textAnchor="middle" fill="#5a4b56" fontSize="18" fontFamily="Inter" fontWeight="600">Кемерово</text>
+      <div className="relative w-full max-w-2xl mx-auto mb-10 bg-white/40 rounded-[2rem] p-3 sm:p-6 shadow-sm border border-white/80 backdrop-blur-md">
+        <svg viewBox="200 10 560 300" className="w-full h-auto drop-shadow-sm">
+          <path d="M290,250 Q490,40 700,145" fill="none" stroke="rgba(244,143,177,0.3)" strokeWidth="6" strokeLinecap="round" strokeDasharray="12 12" />
+          <path d="M290,250 Q490,40 700,145" fill="none" stroke="#f48fb1" strokeWidth="8" strokeLinecap="round" pathLength="100" strokeDasharray="100" strokeDashoffset={100 - progress} className="transition-all duration-75 ease-linear" />
+          <circle cx="290" cy="250" r="12" fill="rgba(244,143,177,0.4)" className="animate-breathe" />
+          <circle cx="290" cy="250" r="6" fill="#f48fb1" />
+          <text x="290" y="290" textAnchor="middle" fill="#5a4b56" fontSize="24" fontFamily="Inter" fontWeight="600">Ереван</text>
+          <circle cx="700" cy="145" r="12" fill="rgba(255,182,193,0.4)" className="animate-breathe" />
+          <circle cx="700" cy="145" r="6" fill="#ffb6c1" />
+          <text x="700" y="185" textAnchor="middle" fill="#5a4b56" fontSize="24" fontFamily="Inter" fontWeight="600">Кемерово</text>
           {/* Самолетик */}
           <g transform={`translate(${planeX}, ${planeY}) rotate(${angle})`} className="transition-all duration-75 ease-linear">
             {/* Тень самолета для 3D эффекта */}
@@ -263,9 +263,9 @@ function Step3({ onNext }) {
         onMouseLeave={stopHold}
         onTouchStart={(e) => { e.preventDefault(); startHold(e); }}
         onTouchEnd={(e) => { e.preventDefault(); stopHold(e); }}
-        className="glass relative overflow-hidden px-14 py-6 rounded-full text-rose-500 uppercase tracking-widest cursor-pointer select-none transition-transform hover:scale-105 active:scale-95 shadow-[0_10px_40px_rgba(244,143,177,0.2)]"
+        className="glass relative overflow-hidden px-8 py-5 sm:px-14 sm:py-6 rounded-full text-rose-500 uppercase tracking-widest cursor-pointer select-none transition-transform active:scale-95 shadow-sm active:shadow-inner"
       >
-        <span className="relative z-10 font-bold">Нажми и удерживай</span>
+        <span className="relative z-10 font-bold text-sm sm:text-base">Нажми и удерживай</span>
         <div className="hold-progress-bg" style={{ width: `${progress}%` }} />
       </button>
     </div>
@@ -307,8 +307,8 @@ function Step4({ onNext }) {
           <button
             key={item.id}
             onClick={() => handleAnswer(i, item.correct)}
-            className={`glass-btn p-4 rounded-3xl flex flex-col items-center justify-center gap-4 transition-all duration-300 shadow-sm hover:shadow-md ${
-              errorIndex === i ? 'animate-shake-soft border-rose-300 bg-rose-50' : 'hover:scale-105'
+            className={`glass-btn p-4 rounded-3xl flex flex-col items-center justify-center gap-3 transition-all duration-300 shadow-sm md:hover:shadow-md active:scale-95 ${
+              errorIndex === i ? 'animate-shake-soft border-rose-300 bg-rose-50' : 'active:bg-rose-50'
             }`}
           >
             <img src={item.img} alt={item.name} className="w-24 h-24 object-contain drop-shadow-md" />
@@ -432,8 +432,8 @@ function Step5({ onNext, pauseMusic }) {
           <button
             key={i}
             onClick={() => handleAnswer(i, ans.correct)}
-            className={`glass-btn p-5 rounded-2xl flex items-center justify-center gap-4 transition-all text-gray-600 font-medium text-lg shadow-sm hover:shadow-md ${
-              errorIndex === i ? 'animate-shake-soft border-rose-300 text-rose-500 bg-rose-50' : ''
+            className={`glass-btn p-5 rounded-2xl flex items-center justify-center gap-4 transition-all text-gray-600 font-medium text-lg shadow-sm md:hover:shadow-md active:scale-[0.98] ${
+              errorIndex === i ? 'animate-shake-soft border-rose-300 text-rose-500 bg-rose-50' : 'active:bg-rose-50'
             }`}
           >
             <span className="text-rose-400 drop-shadow-sm">{ans.icon}</span>
@@ -478,18 +478,18 @@ function Step6({ onNext }) {
       <div className="grid grid-cols-2 gap-6 max-w-lg w-full mx-auto mb-12">
         <button
           onClick={() => toggleSelect('cascade')}
-          className={`glass-btn p-4 rounded-3xl flex flex-col items-center gap-4 transition-all duration-300 ${
-            selected.includes('cascade') ? 'border-rose-300 bg-white/90 scale-105 shadow-[0_15px_30px_rgba(244,143,177,0.3)] animate-pop' : ''
+          className={`glass-btn p-4 rounded-3xl flex flex-col items-center gap-4 transition-all duration-300 active:scale-95 ${
+            selected.includes('cascade') ? 'border-rose-300 bg-rose-50 shadow-inner' : 'active:bg-rose-50'
           }`}
         >
           <img src="/images/cascade.png" alt="Закаты на Каскаде" className="w-full aspect-square object-cover rounded-2xl shadow-sm border border-white/50" />
-          <span className="text-sm font-medium text-gray-600">Закаты на Каскаде</span>
+          <span className="text-sm font-medium text-gray-600 leading-tight">Закаты на Каскаде</span>
         </button>
 
         <button
           onClick={() => toggleSelect('ropeway')}
-          className={`glass-btn p-4 rounded-3xl flex flex-col items-center gap-4 transition-all duration-300 ${
-            selected.includes('ropeway') ? 'border-rose-300 bg-white/90 scale-105 shadow-[0_15px_30px_rgba(244,143,177,0.3)] animate-pop' : ''
+          className={`glass-btn p-4 rounded-3xl flex flex-col items-center gap-4 transition-all duration-300 active:scale-95 ${
+            selected.includes('ropeway') ? 'border-rose-300 bg-rose-50 shadow-inner' : 'active:bg-rose-50'
           }`}
         >
           <img src="/images/ropeway.png" alt="Канатка в Цахкадзоре" className="w-full aspect-square object-cover rounded-2xl shadow-sm border border-white/50" />
