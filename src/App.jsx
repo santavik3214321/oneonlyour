@@ -91,6 +91,58 @@ function MusicPlayer({ isPlaying, toggleMusic, setMusicState }) {
   );
 }
 
+// ─── Компонент: Счетчик Времени ──────────────────────────
+function TimeCounter() {
+  const [timePassed, setTimePassed] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    // 5 августа 2026 года, время Армении (UTC+4)
+    const startDate = new Date('2026-08-05T00:00:00+04:00').getTime();
+
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const diff = now - startDate;
+
+      if (diff > 0) {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((diff / 1000 / 60) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+
+        setTimePassed({ days, hours, minutes, seconds });
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="fixed top-4 left-4 sm:top-6 sm:left-6 z-[100] glass px-4 py-2 sm:px-5 sm:py-2.5 rounded-[1.25rem] sm:rounded-full flex items-center justify-center gap-3 sm:gap-4 shadow-sm border border-white/60 animate-blur-fade">
+      <div className="flex flex-col items-center min-w-[28px]">
+        <span className="text-sm sm:text-base font-bold text-rose-500 font-heading leading-none">{timePassed.days}</span>
+        <span className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-1.5">дней</span>
+      </div>
+      <div className="w-px h-5 sm:h-6 bg-rose-200/60"></div>
+      <div className="flex flex-col items-center min-w-[20px]">
+        <span className="text-sm sm:text-base font-bold text-rose-500 font-heading leading-none">{String(timePassed.hours).padStart(2, '0')}</span>
+        <span className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-1.5">час</span>
+      </div>
+      <div className="w-px h-5 sm:h-6 bg-rose-200/60"></div>
+      <div className="flex flex-col items-center min-w-[20px]">
+        <span className="text-sm sm:text-base font-bold text-rose-500 font-heading leading-none">{String(timePassed.minutes).padStart(2, '0')}</span>
+        <span className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-1.5">мин</span>
+      </div>
+      <div className="w-px h-5 sm:h-6 bg-rose-200/60"></div>
+      <div className="flex flex-col items-center min-w-[20px]">
+        <span className="text-sm sm:text-base font-bold text-rose-500 font-heading leading-none">{String(timePassed.seconds).padStart(2, '0')}</span>
+        <span className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-1.5">сек</span>
+      </div>
+    </div>
+  );
+}
+
 // ─── Шаг 1: Приглашение ────────────────────────────────────
 function Step1({ onNext }) {
   return (
@@ -216,16 +268,19 @@ function Step3({ onNext }) {
   };
 
   const t = progress / 100;
-  const p0 = { x: 290, y: 250 }; 
+  const p0 = { x: 700, y: 145 }; // Кемерово
   const p1 = { x: 490, y: 40 };  
-  const p2 = { x: 700, y: 145 }; 
+  const p2 = { x: 290, y: 250 }; // Ереван
 
   const planeX = Math.pow(1 - t, 2) * p0.x + 2 * (1 - t) * t * p1.x + Math.pow(t, 2) * p2.x;
   const planeY = Math.pow(1 - t, 2) * p0.y + 2 * (1 - t) * t * p1.y + Math.pow(t, 2) * p2.y;
   
   const dx = 2 * (1 - t) * (p1.x - p0.x) + 2 * t * (p2.x - p1.x);
   const dy = 2 * (1 - t) * (p1.y - p0.y) + 2 * t * (p2.y - p1.y);
-  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+  // Lucide Plane icon points diagonally up-right natively. 
+  // We need to adjust the angle so it points correctly along the path.
+  // When dx,dy points left-down, we add offset so it looks forward.
+  const angle = Math.atan2(dy, dx) * (180 / Math.PI) + 45;
 
   return (
     <div className="quest-container animate-blur-fade text-center w-full max-w-4xl">
@@ -239,8 +294,8 @@ function Step3({ onNext }) {
       
       <div className="relative w-full max-w-2xl mx-auto mb-10 bg-white/40 rounded-[2rem] p-3 sm:p-6 shadow-sm border border-white/80 backdrop-blur-md">
         <svg viewBox="200 10 560 300" className="w-full h-auto drop-shadow-sm">
-          <path d="M290,250 Q490,40 700,145" fill="none" stroke="rgba(244,143,177,0.3)" strokeWidth="6" strokeLinecap="round" strokeDasharray="12 12" />
-          <path d="M290,250 Q490,40 700,145" fill="none" stroke="#f48fb1" strokeWidth="8" strokeLinecap="round" pathLength="100" strokeDasharray="100" strokeDashoffset={100 - progress} className="transition-all duration-75 ease-linear" />
+          <path d="M700,145 Q490,40 290,250" fill="none" stroke="rgba(244,143,177,0.3)" strokeWidth="6" strokeLinecap="round" strokeDasharray="12 12" />
+          <path d="M700,145 Q490,40 290,250" fill="none" stroke="#f48fb1" strokeWidth="8" strokeLinecap="round" pathLength="100" strokeDasharray="100" strokeDashoffset={100 - progress} className="transition-all duration-75 ease-linear" />
           <circle cx="290" cy="250" r="12" fill="rgba(244,143,177,0.4)" className="animate-breathe" />
           <circle cx="290" cy="250" r="6" fill="#f48fb1" />
           <text x="290" y="290" textAnchor="middle" fill="#5a4b56" fontSize="24" fontFamily="Inter" fontWeight="600">Ереван</text>
@@ -563,7 +618,7 @@ function Step8() {
               </div>
             </div>
             {/* Подпись на полароиде */}
-            <p className="absolute bottom-5 left-0 right-0 text-center text-gray-700 font-hand text-3xl font-bold">
+            <p className="absolute bottom-12 left-0 right-0 text-center text-gray-700 font-hand text-3xl font-bold">
               Моя принцесса
             </p>
           </div>
@@ -602,6 +657,10 @@ export default function App() {
         {step === 8 && <Step8 />}
       </main>
 
+      {/* Таймер вместе (Слева) */}
+      <TimeCounter />
+
+      {/* Музыкальный плеер (Справа) */}
       <div className="opacity-100 transition-opacity duration-1000 z-50">
         <MusicPlayer 
           isPlaying={isMusicPlaying} 
