@@ -1,278 +1,169 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Caveat:wght@400;500;700&display=swap');
 
 /* ============================================
-   Наша История — Custom Design System
-   Тёмная, интимная тема Midnight Blue
+   Интерактивный Квест Любви — Romantic Pastel
    ============================================ */
 
-/* --- Custom Theme Configuration (Tailwind v4) --- */
 @theme {
-  --color-midnight: #0a0e1a;
-  --color-deep-night: #060a14;
-  --color-navy: #101830;
-  --color-navy-light: #1a2440;
-  --color-gold: #c9a84c;
-  --color-gold-light: #e8d08c;
-  --color-gold-dim: rgba(201, 168, 76, 0.15);
-  --color-wendys-red: #e2383f;
-  --color-wendys-red-warm: #c63035;
-  --color-wendys-glow: rgba(226, 56, 63, 0.2);
-  --color-text-primary: #f0ece4;
-  --color-text-secondary: #a8a0b8;
-  --color-text-muted: #6b6580;
-  --color-glass: rgba(16, 24, 48, 0.6);
-  --color-glass-border: rgba(201, 168, 76, 0.12);
-  --color-glass-hover: rgba(26, 36, 64, 0.8);
+  --color-pastel-bg: #fff5f8;
+  --color-pastel-pink: #ffb6c1;
+  --color-pastel-peach: #ffdab9;
+  --color-pastel-rose: #f48fb1;
+  --color-text-main: #5a4b56;
+  --color-text-light: #9c8e98;
+  
+  --color-glass: rgba(255, 255, 255, 0.65);
+  --color-glass-border: rgba(255, 255, 255, 1);
+  --color-glass-hover: rgba(255, 255, 255, 0.9);
 
   --font-heading: 'Lora', Georgia, serif;
   --font-body: 'Inter', system-ui, sans-serif;
-
-  --animate-float: float 6s ease-in-out infinite;
-  --animate-pulse-gold: pulse-gold 3s ease-in-out infinite;
-  --animate-glow: glow 4s ease-in-out infinite;
-  --animate-melt: melt 0.6s ease-in-out;
-  --animate-fade-up: fade-up 0.8s ease-out forwards;
-  --animate-shimmer: shimmer 3s linear infinite;
-  --animate-sparkle: sparkle 2s ease-in-out infinite;
+  --font-hand: 'Caveat', cursive;
 }
 
-/* --- Keyframe Animations --- */
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
+@keyframes blur-fade-in {
+  from { opacity: 0; filter: blur(15px); transform: scale(0.95); }
+  to { opacity: 1; filter: blur(0); transform: scale(1); }
 }
 
-@keyframes pulse-gold {
-  0%, 100% { box-shadow: 0 0 20px rgba(201, 168, 76, 0.15); }
-  50% { box-shadow: 0 0 40px rgba(201, 168, 76, 0.35), 0 0 60px rgba(201, 168, 76, 0.15); }
+@keyframes breathe {
+  0%, 100% { transform: scale(1); box-shadow: 0 10px 30px rgba(244, 143, 177, 0.3); }
+  50% { transform: scale(1.05); box-shadow: 0 20px 50px rgba(244, 143, 177, 0.6); }
 }
 
-@keyframes glow {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+@keyframes float-petal {
+  0% { transform: translateY(-10vh) rotate(0deg) translateX(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(110vh) rotate(360deg) translateX(100px); opacity: 0; }
 }
 
-@keyframes melt {
-  0% {
-    transform: translateY(-10px) scaleY(1.1);
-    opacity: 0;
-    filter: blur(2px);
-  }
-  50% {
-    transform: translateY(3px) scaleY(0.98);
-    filter: blur(0);
-  }
-  100% {
-    transform: translateY(0) scaleY(1);
-    opacity: 1;
-    filter: blur(0);
-  }
+@keyframes bg-breathe {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes shake-soft {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
 }
 
-@keyframes shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
+@keyframes gift-bounce {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  25% { transform: translateY(-8px) rotate(-3deg); }
+  50% { transform: translateY(0) rotate(0); }
+  75% { transform: translateY(-4px) rotate(3deg); }
 }
 
-@keyframes sparkle {
-  0%, 100% { opacity: 0; transform: scale(0); }
-  50% { opacity: 1; transform: scale(1); }
+@keyframes photo-reveal-3d {
+  0% { transform: translateY(80px) scale(0.6) rotateX(20deg) rotateZ(-10deg); opacity: 0; filter: blur(10px); }
+  100% { transform: translateY(0) scale(1) rotateX(0deg) rotateZ(3deg); opacity: 1; filter: blur(0); }
 }
 
-@keyframes arc-pulse {
-  0%, 100% { stroke-dashoffset: 0; opacity: 0.6; }
-  50% { stroke-dashoffset: 20; opacity: 1; }
+@keyframes pop-up {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1.05); }
 }
-
-@keyframes particle-float {
-  0% { transform: translateY(0) translateX(0); opacity: 0; }
-  20% { opacity: 1; }
-  100% { transform: translateY(-100px) translateX(50px); opacity: 0; }
-}
-
-@keyframes slide-down {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Removed global reset to restore Tailwind's default preflight and paddings */
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 80px;
 }
 
 body {
   font-family: var(--font-body);
-  background-color: var(--color-deep-night);
-  color: var(--color-text-primary);
+  background-color: var(--color-pastel-bg);
+  color: var(--color-text-main);
   overflow-x: hidden;
+  overflow-y: auto;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* --- Scrollbar Customization --- */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: var(--color-deep-night);
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(201, 168, 76, 0.3);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(201, 168, 76, 0.5);
+/* Дышащий сказочный фон */
+.magic-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(-45deg, #fff5f8, #ffe4e1, #fff0f5, #ffdab9);
+  background-size: 400% 400%;
+  animation: bg-breathe 15s ease infinite;
+  z-index: 0;
 }
 
-/* --- Glassmorphism Utility --- */
+/* Морозное воздушное стекло */
 .glass {
-  background: rgba(16, 24, 48, 0.45);
-  backdrop-filter: blur(24px) saturate(1.2);
-  -webkit-backdrop-filter: blur(24px) saturate(1.2);
-  border: 1px solid rgba(201, 168, 76, 0.08);
-  border-top: 1px solid rgba(201, 168, 76, 0.18);
-  border-left: 1px solid rgba(201, 168, 76, 0.12);
-  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.3), 0 10px 40px rgba(0, 0, 0, 0.5);
+  background: var(--color-glass);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: 0 10px 40px rgba(244, 143, 177, 0.15);
   border-radius: 24px;
 }
 
-.glass-hover:hover {
-  background: rgba(26, 36, 64, 0.65);
-  border-color: rgba(201, 168, 76, 0.3);
-  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.3), 0 15px 50px rgba(201, 168, 76, 0.12);
+.glass-btn {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 20px rgba(244, 143, 177, 0.1);
+  color: var(--color-text-main);
 }
-
-/* --- Gold Gradient Text --- */
-.text-gradient-gold {
-  background: linear-gradient(135deg, #e8d08c 0%, #c9a84c 50%, #e8d08c 100%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: shimmer 4s linear infinite;
-  text-shadow: 0 0 20px rgba(201, 168, 76, 0.2);
+.glass-btn:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(244, 143, 177, 0.25);
 }
-
-/* --- Section visibility for scroll animations --- */
-.section-hidden {
-  opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-}
-.section-visible {
-  opacity: 1;
+.glass-btn:active {
   transform: translateY(0);
 }
 
-/* --- Timer digit melting effect --- */
-.timer-digit {
-  transition: transform 0.3s ease, opacity 0.3s ease;
-}
-.timer-digit.melting {
-  animation: melt 0.6s ease-in-out;
-}
-
-/* --- Particles Background --- */
-.particle {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  background: var(--color-gold);
-  border-radius: 50%;
-  opacity: 0;
-  animation: particle-float 8s linear infinite;
+.text-gradient-rose {
+  background: linear-gradient(135deg, #f48fb1 0%, #ff8a65 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* --- Map Arc Animation --- */
-.map-arc {
-  stroke-dasharray: 10 5;
-  animation: arc-pulse 3s ease-in-out infinite;
-}
+.animate-blur-fade { animation: blur-fade-in 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.animate-breathe { animation: breathe 3s infinite ease-in-out; }
+.animate-shake-soft { animation: shake-soft 0.4s ease-in-out; }
+.animate-gift-bounce { animation: gift-bounce 2s infinite ease-in-out; }
+.animate-photo-3d { animation: photo-reveal-3d 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+.animate-pop { animation: pop-up 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
-/* --- Video Play Button Pulse --- */
-.play-button-pulse {
-  animation: pulse-gold 2s ease-in-out infinite;
-}
-
-/* --- Card Hover Effects --- */
-.food-card {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.food-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow:
-    0 20px 40px rgba(0, 0, 0, 0.4),
-    0 0 30px rgba(201, 168, 76, 0.1);
-}
-
-.future-card {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.future-card:hover {
-  transform: translateY(-6px);
-  box-shadow:
-    0 16px 32px rgba(0, 0, 0, 0.3),
-    0 0 20px rgba(201, 168, 76, 0.08);
-}
-
-/* --- Hero Background Overlay --- */
-.hero-overlay {
-  background: linear-gradient(
-    180deg,
-    rgba(6, 10, 20, 0.3) 0%,
-    rgba(6, 10, 20, 0.7) 40%,
-    rgba(6, 10, 20, 0.95) 100%
-  );
-}
-
-/* --- Decorative Gold Line --- */
-.gold-line {
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(201, 168, 76, 0.1) 15%,
-    rgba(201, 168, 76, 0.5) 50%,
-    rgba(201, 168, 76, 0.1) 85%,
-    transparent 100%
-  );
-  box-shadow: 0 0 8px rgba(201, 168, 76, 0.25);
-}
-
-/* --- Navbar Animation --- */
-.navbar-slide {
-  animation: slide-down 0.5s ease-out;
-}
-
-/* --- Responsive Image Container --- */
-.img-glow {
+.quest-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100vw;
   position: relative;
+  z-index: 10;
+  padding: 20px;
 }
-.img-glow::after {
-  content: '';
+
+.hold-progress-bg {
   position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, rgba(201, 168, 76, 0.2), transparent, rgba(226, 56, 63, 0.15));
-  z-index: -1;
-  filter: blur(12px);
-  opacity: 0;
-  transition: opacity 0.4s ease;
+  bottom: 0;
+  left: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #f48fb1, #ffdab9);
+  transition: width 0.1s linear;
+  border-radius: 6px;
 }
-.img-glow:hover::after {
-  opacity: 1;
+
+/* Стили для летающих лепестков */
+.petal {
+  position: absolute;
+  top: -10%;
+  width: 15px;
+  height: 15px;
+  background: radial-gradient(circle, #ffb6c1 0%, transparent 80%);
+  border-radius: 50% 0 50% 50%;
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
 }
