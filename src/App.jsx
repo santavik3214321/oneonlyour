@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Volume2, VolumeX, Heart, Copy, Check, Sparkles, MessageCircleHeart, X } from 'lucide-react';
-import { Peer } from 'peerjs';
+import mqtt from 'mqtt';
 
 // ─── Компонент: Летающие Частицы ───────────────────────────
 function MagicParticles() {
@@ -82,7 +82,7 @@ function MusicPlayer({ isPlaying, toggleMusic, setMusicState }) {
 }
 
 // ─── Компонент: Общий Холст (Live Touch) ───────────────────
-function SharedCanvas({ connection, onDisconnect, isHost }) {
+function SharedCanvas({ client, topic, myClientId, isHost }) {
   const canvasRef = useRef(null);
   const localPos = useRef({ x: -100, y: -100 });
   const remotePos = useRef({ x: -100, y: -100 });
@@ -94,33 +94,38 @@ function SharedCanvas({ connection, onDisconnect, isHost }) {
   const [syncProgress, setSyncProgress] = useState(0);
   const [secretUnlocked, setSecretUnlocked] = useState(false);
 
+  // Для Хоста: local = голубой, remote = розовый. Для Гостя: наоборот.
   const localColor = isHost ? '#00e5ff' : '#ff3385';
   const remoteColor = isHost ? '#ff3385' : '#00e5ff';
   
   useEffect(() => {
-    if (!connection) return;
-    const handleData = (data) => {
-      if (data.type === 'pointer') {
-        const x = data.x * window.innerWidth;
-        const y = data.y * window.innerHeight;
-        remotePos.current = { x, y };
-        checkCollision(localPos.current.x, localPos.current.y, x, y);
-      }
-      if (data.type === 'unlock') {
-        setSecretUnlocked(true);
-        if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
-      }
-    };
-    connection.on('data', handleData);
-    connection.on('close', onDisconnect);
-    connection.on('error', onDisconnect);
-    return () => {
-      connection.off('data', handleData);
-      connection.off('close', onDisconnect);
-      connection.off('error', onDisconnect);
-    };
-  }, [connection, onDisconnect]);
+    if (!client) return;
+    const handleData = (recvTopic, message) => {
+      if (recvTopic !== topic) return;
+      try {
+        const data = JSON.parse(message.toString());
+        if (data.sender === myClientId) return; // Игнорируем свои же пакеты
 
+        if (data.type === 'pointer') {
+          const x = data.x * window.innerWidth;
+          const y = data.y * window.innerHeight;
+          remotePos.current = { x, y };
+          checkCollision(localPos.current.x, localPos.current.y, x, y);
+        }
+        if (data.type === 'unlock') {
+          setSecretUnlocked(true);
+          if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+        }
+      } catch (e) {}
+    };
+    
+    client.on('message', handleData);
+    return () => client.removeListener('message', handleData);
+  }, [client, topic, myClientId]);
+
+  // Throttle publish to avoid spamming the public MQTT broker
+  const lastPublish = useRef(0);
+  
   const handlePointerMove = (e) => {
     let clientX = e.clientX;
     let clientY = e.clientY;
@@ -132,19 +137,24 @@ function SharedCanvas({ connection, onDisconnect, isHost }) {
     
     localPos.current = { x: clientX, y: clientY };
     
-    if (connection && connection.open) {
-      connection.send({
+    const now = Date.now();
+    if (client && client.connected && now - lastPublish.current > 30) {
+      lastPublish.current = now;
+      client.publish(topic, JSON.stringify({
+        sender: myClientId,
         type: 'pointer',
         x: clientX / window.innerWidth,
         y: clientY / window.innerHeight
-      });
+      }));
     }
     checkCollision(clientX, clientY, remotePos.current.x, remotePos.current.y);
   };
   
   const handlePointerUp = () => {
      localPos.current = { x: -100, y: -100 };
-     if (connection && connection.open) connection.send({ type: 'pointer', x: -1, y: -1 });
+     if (client && client.connected) {
+       client.publish(topic, JSON.stringify({ sender: myClientId, type: 'pointer', x: -1, y: -1 }));
+     }
      isSyncing.current = false;
      setSyncProgress(0);
   }
@@ -171,7 +181,9 @@ function SharedCanvas({ connection, onDisconnect, isHost }) {
          if (elapsed > 4000 && !secretUnlocked) {
             setSecretUnlocked(true);
             setSyncProgress(0);
-            if (connection && connection.open) connection.send({ type: 'unlock' });
+            if (client && client.connected) {
+               client.publish(topic, JSON.stringify({ sender: myClientId, type: 'unlock' }));
+            }
             if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
          }
       }
@@ -315,115 +327,123 @@ function SharedCanvas({ connection, onDisconnect, isHost }) {
 // ─── Главное Приложение ────────────────────────────────────
 export default function App() {
   const [isMusicPlaying, setIsMusicPlaying] = useState(true);
-  const [peer, setPeer] = useState(null);
-  const [connection, setConnection] = useState(null);
-  const [peerId, setPeerId] = useState('');
-  const [remotePeerId, setRemotePeerId] = useState('');
-  const [copied, setCopied] = useState(false);
+  
+  const [client, setClient] = useState(null);
+  const [roomId, setRoomId] = useState('');
+  const [remoteRoomId, setRemoteRoomId] = useState('');
+  
+  const [connection, setConnection] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
   const [isHost, setIsHost] = useState(true); 
+  
+  // Уникальный ID текущего устройства
+  const myClientId = useRef(Math.random().toString(36).substring(2, 10));
 
   useEffect(() => {
-    try {
-      // Спасаем ID при перезагрузке вкладки (часто бывает на iOS при сворачивании браузера)
-      let savedId = sessionStorage.getItem('myPeerId');
-      if (!savedId) {
-        savedId = 'vika-sv-love-' + Math.random().toString(36).substring(2, 6);
-        sessionStorage.setItem('myPeerId', savedId);
-      }
-      
-      // Использование публичных STUN и бесплатных TURN серверов для обхода VPN / строгих NAT
-      const newPeer = new Peer(savedId, {
-        config: {
-          iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:global.stun.twilio.com:3478' },
-            {
-              urls: "turn:openrelay.metered.ca:80",
-              username: "openrelayproject",
-              credential: "openrelayproject"
-            },
-            {
-              urls: "turn:openrelay.metered.ca:443",
-              username: "openrelayproject",
-              credential: "openrelayproject"
-            },
-            {
-              urls: "turn:openrelay.metered.ca:443?transport=tcp",
-              username: "openrelayproject",
-              credential: "openrelayproject"
-            }
-          ]
-        }
-      });
-      
-      newPeer.on('open', (id) => {
-        setPeerId(id);
-        setError(''); // Очищаем ошибку при успешном коннекте к серверу
-      });
-
-      newPeer.on('connection', (conn) => {
-        setIsHost(true);
-        conn.on('open', () => setConnection(conn));
-        conn.on('close', () => setConnection(null));
-      });
-      
-      // Авто-переподключение, если iOS "усыпил" браузер пока ты копировал код в WhatsApp
-      newPeer.on('disconnected', () => {
-        console.log("Disconnected from server, reconnecting...");
-        if (!newPeer.destroyed) {
-          newPeer.reconnect();
-        }
-      });
-      
-      newPeer.on('error', (err) => {
-        // Ошибка "unavailable-id" значит вкладка дублируется, или старый коннект еще висит
-        if (err.type === 'unavailable-id') {
-           // Генерируем новый, если старый залип на сервере
-           sessionStorage.removeItem('myPeerId');
-           setError('Сессия зависла. Обновите страницу.');
-        } else {
-           setError('Ошибка сети: ' + err.type);
-        }
-        setIsConnecting(false);
-      });
-
-      setPeer(newPeer);
-      return () => newPeer.destroy();
-    } catch (e) {
-      console.error(e);
-      setError('Ошибка сети.');
+    // Восстанавливаем или создаем 8-значный код комнаты
+    let savedRoomId = sessionStorage.getItem('myRoomId');
+    if (!savedRoomId) {
+      // Генерируем 8 случайных символов (цифры и буквы)
+      savedRoomId = Math.random().toString(36).substring(2, 10).toUpperCase();
+      sessionStorage.setItem('myRoomId', savedRoomId);
     }
+    setRoomId(savedRoomId);
+
+    // Подключаемся к публичному надежному MQTT брокеру по защищенному WebSocket
+    const mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
+      clientId: 'sv-vika-' + myClientId.current,
+      keepalive: 60,
+      reconnectPeriod: 1000,
+    });
+    
+    mqttClient.on('connect', () => {
+      // Как Хост, мы слушаем свою комнату на предмет гостей
+      mqttClient.subscribe(`vika-sv-love/room/${savedRoomId}`);
+      setError('');
+    });
+    
+    mqttClient.on('error', (err) => {
+      console.error(err);
+      setError('Ошибка подключения к серверу магии.');
+    });
+
+    setClient(mqttClient);
+
+    return () => {
+      mqttClient.end();
+    };
   }, []);
 
+  // Слушатель входящих сообщений в Лобби
+  useEffect(() => {
+    if (!client) return;
+    
+    const handleMessage = (topic, message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        // Игнорируем эхо своих же сообщений
+        if (data.sender === myClientId.current) return;
+
+        if (data.type === 'hello') {
+          // К нам постучался Гость (Вика)
+          setIsHost(true);
+          setConnection(true); // Открываем Холст
+          
+          // Отправляем ответ, чтобы она тоже открыла Холст
+          client.publish(`vika-sv-love/room/${roomId}`, JSON.stringify({
+            sender: myClientId.current,
+            type: 'hello_back'
+          }));
+        } 
+        else if (data.type === 'hello_back') {
+          // Хост (Ты) подтвердил наше подключение
+          setIsHost(false);
+          setConnection(true); // Открываем Холст
+          setIsConnecting(false);
+        }
+      } catch (e) {}
+    };
+
+    client.on('message', handleMessage);
+    return () => client.removeListener('message', handleMessage);
+  }, [client, roomId]);
+
   const handleConnect = () => {
-    if (peer && remotePeerId) {
+    if (client && remoteRoomId) {
       setIsConnecting(true);
       setError('');
-      try {
-        const conn = peer.connect(remotePeerId);
-        setIsHost(false);
-        
-        conn.on('open', () => {
-          setConnection(conn);
+      const targetRoom = remoteRoomId.toUpperCase().trim();
+      
+      // Подписываемся на её комнату
+      client.subscribe(`vika-sv-love/room/${targetRoom}`, (err) => {
+        if (!err) {
+          // Отправляем стук в дверь
+          client.publish(`vika-sv-love/room/${targetRoom}`, JSON.stringify({
+            sender: myClientId.current,
+            type: 'hello'
+          }));
+          
+          // Ждем 5 секунд ответа
+          setTimeout(() => {
+            setIsConnecting(false);
+            // Если connection всё еще false через 5 сек, значит её нет в сети
+            setConnection(prev => {
+              if (!prev) setError('Она еще не открыла сайт или код неверен!');
+              return prev;
+            });
+          }, 5000);
+        } else {
+          setError('Ошибка подписки на комнату.');
           setIsConnecting(false);
-        });
-        conn.on('error', () => {
-          setError('Связь прервалась.');
-          setIsConnecting(false);
-        });
-        conn.on('close', () => setConnection(null));
-      } catch (e) {
-         setError('Не удалось создать канал.');
-         setIsConnecting(false);
-      }
+        }
+      });
     }
   };
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(peerId);
+    navigator.clipboard.writeText(roomId);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -439,7 +459,12 @@ export default function App() {
 
       {/* ── Состояние 1: Экран Холста ── */}
       {connection ? (
-        <SharedCanvas connection={connection} onDisconnect={() => setConnection(null)} isHost={isHost} />
+        <SharedCanvas 
+          client={client} 
+          topic={`vika-sv-love/room/${isHost ? roomId : remoteRoomId.toUpperCase()}`}
+          myClientId={myClientId.current}
+          isHost={isHost} 
+        />
       ) : (
         /* ── Состояние 2: Лобби (Скроллируемое на мобилках) ── */
         <>
@@ -463,8 +488,8 @@ export default function App() {
               <div className="w-full bg-black/20 p-4 sm:p-5 rounded-2xl border border-white/5 mb-6 relative group">
                 <p className="text-[9px] sm:text-[10px] text-rose-200/50 uppercase tracking-widest font-bold mb-3 text-center">Твой личный код</p>
                 <div className="flex items-center justify-between gap-3 bg-white/5 rounded-xl p-1 pl-4 border border-white/10">
-                  <span className="text-xs sm:text-sm font-mono text-rose-300 font-medium tracking-wide truncate">
-                    {peerId || '...'}
+                  <span className="text-xs sm:text-sm font-mono text-rose-300 font-medium tracking-widest truncate">
+                    {roomId || '...'}
                   </span>
                   <button onClick={copyToClipboard} className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-rose-500/20 hover:bg-rose-500/40 text-rose-300 flex items-center justify-center transition-all shrink-0">
                     {copied ? <Check size={16} /> : <Copy size={16} />}
@@ -476,15 +501,15 @@ export default function App() {
                 <input 
                   type="text" 
                   placeholder="Введи её код..." 
-                  value={remotePeerId}
-                  onChange={(e) => setRemotePeerId(e.target.value)}
-                  className="w-full px-4 sm:px-5 py-3 sm:py-4 rounded-xl border border-white/10 bg-black/30 text-white text-center text-xs sm:text-sm focus:outline-none focus:border-rose-400/50 focus:bg-black/50 transition-all font-mono placeholder:text-white/20 placeholder:font-body"
+                  value={remoteRoomId}
+                  onChange={(e) => setRemoteRoomId(e.target.value)}
+                  className="w-full px-4 sm:px-5 py-3 sm:py-4 rounded-xl border border-white/10 bg-black/30 text-white text-center text-xs sm:text-sm focus:outline-none focus:border-rose-400/50 focus:bg-black/50 transition-all font-mono placeholder:text-white/20 placeholder:font-body uppercase"
                 />
                 {error && <p className="text-[10px] sm:text-xs text-rose-400 text-center">{error}</p>}
                 
                 <button 
                   onClick={handleConnect}
-                  disabled={!remotePeerId || isConnecting}
+                  disabled={!remoteRoomId || isConnecting}
                   className="premium-btn w-full py-3 sm:py-4 mt-1 rounded-xl text-white uppercase tracking-widest text-[10px] sm:text-xs font-bold disabled:opacity-50"
                 >
                   {isConnecting ? 'Соединяем...' : 'Прикоснуться'}
