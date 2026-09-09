@@ -1,47 +1,64 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Volume2, VolumeX, MapPin, Heart, Gift, Camera, Plane, Newspaper, Film, Tv, Map } from 'lucide-react';
+import { Volume2, VolumeX, Heart, Copy, Check, Sparkles, MessageCircleHeart, X } from 'lucide-react';
+import { Peer } from 'peerjs';
 
-// ─── Компонент: Летающие Лепестки / Волшебная Пыльца ───────
+// ─── Компонент: Летающие Частицы ───────────────────────────
 function MagicParticles() {
-  const [petals, setPetals] = useState([]);
-
+  const [particles, setParticles] = useState([]);
   useEffect(() => {
-    // Генерируем 30 лепестков с разными параметрами
-    const newPetals = Array.from({ length: 30 }).map((_, i) => ({
+    const newParticles = Array.from({ length: 40 }).map((_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
-      animationDuration: `${10 + Math.random() * 15}s`,
+      animationDuration: `${15 + Math.random() * 20}s`,
       animationDelay: `${Math.random() * 10}s`,
-      opacity: 0.3 + Math.random() * 0.5,
-      scale: 0.5 + Math.random() * 0.8,
+      opacity: 0.1 + Math.random() * 0.3,
+      scale: 0.2 + Math.random() * 0.5,
     }));
-    setPetals(newPetals);
+    setParticles(newParticles);
   }, []);
-
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-      {petals.map(p => (
-        <div
-          key={p.id}
-          className="petal"
-          style={{
-            left: p.left,
-            animation: `float-petal ${p.animationDuration} linear infinite`,
-            animationDelay: p.animationDelay,
-            opacity: p.opacity,
-            transform: `scale(${p.scale})`,
-          }}
-        />
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-[1]">
+      {particles.map(p => (
+        <div key={p.id} className="particle" style={{ left: p.left, width: '10px', height: '10px', animation: `float-particle ${p.animationDuration} linear infinite`, animationDelay: p.animationDelay, opacity: p.opacity, transform: `scale(${p.scale})` }} />
       ))}
     </div>
   );
 }
 
-// ─── Компонент: Музыкальный плеер ──────────────────────────
+// ─── Компонент: Счетчик Времени (С учетом Safe Area) ───────
+function TimeCounter() {
+  const [timePassed, setTimePassed] = useState({ days: 0, hours: 0, minutes: 0 });
+  useEffect(() => {
+    const startDate = new Date('2026-08-05T00:00:00+04:00').getTime();
+    const updateTimer = () => {
+      const diff = new Date().getTime() - startDate;
+      if (diff > 0) {
+        setTimePassed({
+          days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((diff / 1000 / 60) % 60)
+        });
+      }
+    };
+    updateTimer();
+    const interval = setInterval(updateTimer, 60000);
+    return () => clearInterval(interval);
+  }, []);
+  
+  return (
+    <div className="pointer-events-none premium-glass px-3 py-1.5 sm:px-4 sm:py-2 rounded-full flex items-center justify-center gap-1.5 shadow-lg border border-white/10 animate-blur-fade">
+      <Heart className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-rose-400 animate-pulse" fill="currentColor" />
+      <div className="flex gap-1 sm:gap-1.5 items-baseline">
+        <span className="text-xs sm:text-sm font-bold text-white tracking-wide">{timePassed.days}д</span>
+        <span className="text-[10px] sm:text-xs text-white/70">{String(timePassed.hours).padStart(2, '0')}:{String(timePassed.minutes).padStart(2, '0')}</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Компонент: Музыкальный плеер (С учетом Safe Area) ──────
 function MusicPlayer({ isPlaying, toggleMusic, setMusicState }) {
   const audioRef = useRef(null);
-  const hasSeeked = useRef(false);
-
   useEffect(() => {
     if (audioRef.current) {
       if (isPlaying) {
@@ -54,575 +71,241 @@ function MusicPlayer({ isPlaying, toggleMusic, setMusicState }) {
       }
     }
   }, [isPlaying, setMusicState]);
-
-  const handleLoadedMetadata = () => {
-    if (audioRef.current && !hasSeeked.current) {
-      audioRef.current.currentTime = 111; // Старт с 1:51, как и просили
-      hasSeeked.current = true;
-    }
-  };
-
   return (
     <>
-      <audio 
-        ref={audioRef} 
-        src="/music/celentano.mp3" 
-        loop 
-        autoPlay
-        onLoadedMetadata={handleLoadedMetadata}
-      />
-      <button
-        onClick={toggleMusic}
-        className="fixed top-4 right-4 sm:top-6 sm:right-6 z-[100] glass px-4 py-2.5 rounded-full flex items-center gap-2 cursor-pointer hover:bg-white/90 transition-all duration-300 border border-white/60 shadow-[0_4px_20px_rgba(244,143,177,0.3)] animate-blur-fade"
-      >
-        {isPlaying ? (
-          <>
-            <Volume2 className="w-5 h-5 text-rose-500 animate-breathe" />
-            <span className="text-xs font-bold text-rose-500 uppercase tracking-wider">Музыка</span>
-          </>
-        ) : (
-          <>
-            <VolumeX className="w-5 h-5 text-gray-400" />
-            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Включить звук</span>
-          </>
-        )}
+      <audio ref={audioRef} src="/music/sting.mp3" loop autoPlay />
+      <button onClick={toggleMusic} className={`pointer-events-auto premium-glass w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center cursor-pointer transition-all duration-500 border shadow-lg ${isPlaying ? 'border-rose-400/50 animate-pulse-ring' : 'border-white/10 opacity-70'} animate-blur-fade hover:scale-110 active:scale-90`}>
+        {isPlaying ? <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-400" /> : <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />}
       </button>
     </>
   );
 }
 
-// ─── Компонент: Счетчик Времени ──────────────────────────
-function TimeCounter() {
-  const [timePassed, setTimePassed] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+// ─── Компонент: Общий Холст (Live Touch) ───────────────────
+function SharedCanvas({ connection, onDisconnect, isHost }) {
+  const canvasRef = useRef(null);
+  const localPos = useRef({ x: -100, y: -100 });
+  const remotePos = useRef({ x: -100, y: -100 });
+  const ripples = useRef([]);
+  
+  // Созвездие (Секрет)
+  const isSyncing = useRef(false);
+  const syncStartTime = useRef(0);
+  const [syncProgress, setSyncProgress] = useState(0);
+  const [secretUnlocked, setSecretUnlocked] = useState(false);
 
+  const localColor = isHost ? '#00e5ff' : '#ff3385';
+  const remoteColor = isHost ? '#ff3385' : '#00e5ff';
+  
   useEffect(() => {
-    // 5 августа 2026 года, время Армении (UTC+4)
-    const startDate = new Date('2026-08-05T00:00:00+04:00').getTime();
-
-    const updateTimer = () => {
-      const now = new Date().getTime();
-      const diff = now - startDate;
-
-      if (diff > 0) {
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-        const minutes = Math.floor((diff / 1000 / 60) % 60);
-        const seconds = Math.floor((diff / 1000) % 60);
-
-        setTimePassed({ days, hours, minutes, seconds });
+    if (!connection) return;
+    const handleData = (data) => {
+      if (data.type === 'pointer') {
+        const x = data.x * window.innerWidth;
+        const y = data.y * window.innerHeight;
+        remotePos.current = { x, y };
+        checkCollision(localPos.current.x, localPos.current.y, x, y);
+      }
+      if (data.type === 'unlock') {
+        setSecretUnlocked(true);
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
       }
     };
+    connection.on('data', handleData);
+    connection.on('close', onDisconnect);
+    connection.on('error', onDisconnect);
+    return () => {
+      connection.off('data', handleData);
+      connection.off('close', onDisconnect);
+      connection.off('error', onDisconnect);
+    };
+  }, [connection, onDisconnect]);
 
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  const handlePointerMove = (e) => {
+    let clientX = e.clientX;
+    let clientY = e.clientY;
+    
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    }
+    
+    localPos.current = { x: clientX, y: clientY };
+    
+    if (connection && connection.open) {
+      connection.send({
+        type: 'pointer',
+        x: clientX / window.innerWidth,
+        y: clientY / window.innerHeight
+      });
+    }
+    checkCollision(clientX, clientY, remotePos.current.x, remotePos.current.y);
+  };
+  
+  const handlePointerUp = () => {
+     localPos.current = { x: -100, y: -100 };
+     if (connection && connection.open) connection.send({ type: 'pointer', x: -1, y: -1 });
+     isSyncing.current = false;
+     setSyncProgress(0);
+  }
+  
+  const createRipple = (x, y) => {
+    ripples.current.push({ x, y, radius: 0, alpha: 1, color: '#f48fb1' });
+    if (navigator.vibrate) navigator.vibrate(50);
+  };
 
-  return (
-    <div className="fixed top-4 left-4 sm:top-6 sm:left-6 z-[100] glass px-4 py-2 sm:px-5 sm:py-2.5 rounded-[1.25rem] sm:rounded-full flex items-center justify-center gap-3 sm:gap-4 shadow-sm border border-white/60 animate-blur-fade">
-      <div className="flex flex-col items-center min-w-[28px]">
-        <span className="text-sm sm:text-base font-bold text-rose-500 font-heading leading-none">{timePassed.days}</span>
-        <span className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-1.5">дней</span>
-      </div>
-      <div className="w-px h-5 sm:h-6 bg-rose-200/60"></div>
-      <div className="flex flex-col items-center min-w-[20px]">
-        <span className="text-sm sm:text-base font-bold text-rose-500 font-heading leading-none">{String(timePassed.hours).padStart(2, '0')}</span>
-        <span className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-1.5">час</span>
-      </div>
-      <div className="w-px h-5 sm:h-6 bg-rose-200/60"></div>
-      <div className="flex flex-col items-center min-w-[20px]">
-        <span className="text-sm sm:text-base font-bold text-rose-500 font-heading leading-none">{String(timePassed.minutes).padStart(2, '0')}</span>
-        <span className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-1.5">мин</span>
-      </div>
-      <div className="w-px h-5 sm:h-6 bg-rose-200/60"></div>
-      <div className="flex flex-col items-center min-w-[20px]">
-        <span className="text-sm sm:text-base font-bold text-rose-500 font-heading leading-none">{String(timePassed.seconds).padStart(2, '0')}</span>
-        <span className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-1.5">сек</span>
-      </div>
-    </div>
-  );
-}
-
-// ─── Шаг 1: Приглашение ────────────────────────────────────
-function Step1({ onNext }) {
-  return (
-    <div className="quest-container animate-blur-fade text-center">
-      <Heart className="w-16 h-16 text-rose-400 mx-auto mb-8 animate-breathe drop-shadow-[0_0_20px_rgba(244,143,177,0.6)]" fill="currentColor" />
-      <h1 className="font-heading text-4xl md:text-5xl font-medium mb-6 text-gray-800">
-        Привет, моя принцесса.
-      </h1>
-      <p className="text-gray-500 text-lg mb-12 max-w-xl leading-relaxed">
-        Я приготовил для тебя кое-что особенное. Это не просто сайт, это наше личное, нежное путешествие. Готова?
-      </p>
-      <button onClick={onNext} className="glass-btn px-10 py-4 rounded-full text-rose-500 uppercase tracking-widest text-sm font-bold shadow-[0_10px_30px_rgba(244,143,177,0.3)] hover:scale-105 animate-breathe">
-        Начать путь
-      </button>
-    </div>
-  );
-}
-
-// ─── Шаг 2: Проверка памяти (Двойной вопрос) ─────────────────
-function Step2({ onNext }) {
-  const [phase, setPhase] = useState(1);
-  const [errorIndex, setErrorIndex] = useState(null);
-
-  const handleAnswer = (index, answerType) => {
-    if (phase === 1) {
-      if (answerType === 'wendys') {
-        setPhase(2);
+  const checkCollision = (lx, ly, rx, ry) => {
+    if (lx < 0 || rx < 0) return; 
+    const dist = Math.hypot(lx - rx, ly - ry);
+    
+    if (dist < 50) {
+      if (!isSyncing.current) {
+         isSyncing.current = true;
+         syncStartTime.current = Date.now();
+         createRipple((lx+rx)/2, (ly+ry)/2);
       } else {
-        setErrorIndex(index);
-        setTimeout(() => setErrorIndex(null), 500);
+         const elapsed = Date.now() - syncStartTime.current;
+         const progress = Math.min((elapsed / 4000) * 100, 100);
+         setSyncProgress(progress);
+         
+         if (elapsed > 4000 && !secretUnlocked) {
+            setSecretUnlocked(true);
+            setSyncProgress(0);
+            if (connection && connection.open) connection.send({ type: 'unlock' });
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+         }
       }
-    } else if (phase === 2) {
-      if (answerType === 'fountains') {
-        onNext();
-      } else {
-        setErrorIndex(index);
-        setTimeout(() => setErrorIndex(null), 500);
+    } else {
+      if (isSyncing.current) {
+        isSyncing.current = false;
+        setSyncProgress(0);
       }
     }
   };
 
-  const answersPhase1 = [
-    { text: "В самолете", type: 'plane' },
-    { text: "В Wendy's", type: 'wendys' },
-    { text: "У поющих фонтанов Еревана", type: 'fountains' },
-  ];
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', resize);
+    resize();
+    
+    let animationId;
+    const render = () => {
+      ctx.fillStyle = 'rgba(8, 6, 20, 0.08)'; 
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      for (let i = ripples.current.length - 1; i >= 0; i--) {
+        const r = ripples.current[i];
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 107, 158, ${r.alpha})`;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        r.radius += 4;
+        r.alpha -= 0.02;
+        if (r.alpha <= 0) ripples.current.splice(i, 1);
+      }
 
-  const answersPhase2 = [
-    { text: "В самолете", type: 'plane' },
-    { text: "На улице", type: 'street' },
-    { text: "У поющих фонтанов Еревана", type: 'fountains' },
-  ];
+      if (remotePos.current.x >= 0) {
+        ctx.beginPath();
+        ctx.arc(remotePos.current.x, remotePos.current.y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = remoteColor;
+        ctx.shadowColor = remoteColor;
+        ctx.shadowBlur = 20;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(remotePos.current.x, remotePos.current.y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+      }
+
+      if (localPos.current.x >= 0) {
+        ctx.beginPath();
+        ctx.arc(localPos.current.x, localPos.current.y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = localColor;
+        ctx.shadowColor = localColor;
+        ctx.shadowBlur = 20;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(localPos.current.x, localPos.current.y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+      }
+      
+      animationId = requestAnimationFrame(render);
+    };
+    render();
+    
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationId);
+    };
+  }, [localColor, remoteColor]);
 
   return (
-    <div className="quest-container animate-blur-fade text-center">
-      <h2 className="font-heading text-xl text-rose-400 mb-4 tracking-widest uppercase text-sm">Глава 1</h2>
+    <div 
+      className="absolute inset-0 touch-none cursor-crosshair z-0 overflow-hidden" 
+      style={{ backgroundColor: '#080614' }}
+      onPointerMove={handlePointerMove}
+      onPointerDown={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerUp}
+      onTouchMove={handlePointerMove}
+      onTouchStart={handlePointerMove}
+      onTouchEnd={handlePointerUp}
+      onTouchCancel={handlePointerUp}
+    >
+      <canvas ref={canvasRef} className="block w-full h-full" />
       
-      {phase === 1 ? (
-        <h3 className="font-heading text-3xl md:text-4xl font-medium mb-12 text-gray-700 animate-blur-fade">
-          Помнишь ли ты, где я увидел тебя в самый первый раз?
-        </h3>
-      ) : (
-        <div className="animate-blur-fade">
-          <h3 className="font-heading text-3xl md:text-4xl font-medium mb-4 text-gray-700">
-            Именно так! Глаз не мог оторвать... 😍
-          </h3>
-          <p className="text-lg text-gray-500 mb-10 max-w-lg mx-auto">
-            Но где мы по-настоящему познакомились и заговорили?
-          </p>
+      {syncProgress > 0 && !secretUnlocked && (
+        <div 
+          className="absolute pointer-events-none transition-all duration-100 ease-out"
+          style={{ 
+            left: (localPos.current.x + remotePos.current.x)/2, 
+            top: (localPos.current.y + remotePos.current.y)/2, 
+            transform: 'translate(-50%, -50%)' 
+          }}
+        >
+          <svg width="80" height="80" className="animate-pulse">
+            <circle cx="40" cy="40" r="36" fill="none" stroke="rgba(255,107,158,0.2)" strokeWidth="4" />
+            <circle cx="40" cy="40" r="36" fill="none" stroke="#ff6b9e" strokeWidth="4" 
+                    strokeDasharray="226" strokeDashoffset={226 - (226 * syncProgress) / 100}
+                    className="transition-all duration-100" style={{ transformOrigin: 'center', transform: 'rotate(-90deg)' }} />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+             <Heart className="w-8 h-8 text-rose-500 animate-breathe" fill="#f48fb1" />
+          </div>
+        </div>
+      )}
+      
+      {!secretUnlocked && (
+        <div className="absolute top-[30vh] left-1/2 -translate-x-1/2 text-white/40 text-[10px] sm:text-xs tracking-[0.3em] uppercase text-center font-bold font-body animate-breathe pointer-events-none w-[90%]">
+          Коснитесь друг друга и не отпускайте
         </div>
       )}
 
-      <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
-        {(phase === 1 ? answersPhase1 : answersPhase2).map((ans, i) => (
-          <button
-            key={phase + ans.type} // Меняем ключ, чтобы анимации не пересекались при смене фазы
-            onClick={() => handleAnswer(i, ans.type)}
-            className={`glass-btn p-5 rounded-2xl text-left pl-6 transition-all text-gray-600 font-medium text-lg shadow-sm md:hover:shadow-md active:scale-[0.98] ${
-              errorIndex === i ? 'animate-shake-soft selected-choice text-rose-500' : 'active:bg-rose-50'
-            }`}
-          >
-            {ans.text}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── Шаг 3: Карта (Удержание и Самолетик) ────────────────────
-function Step3({ onNext }) {
-  const [progress, setProgress] = useState(0);
-  const intervalRef = useRef(null);
-  const isDoneRef = useRef(false); // Защита от двойного срабатывания
-
-  const startHold = (e) => {
-    if (isDoneRef.current) return;
-    
-    // Очищаем предыдущий интервал, если он был (защита от touch+mouse одновременно)
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    
-    intervalRef.current = setInterval(() => {
-      setProgress(p => {
-        const nextP = p + 0.5; // ~6 секунд удержания
-        if (nextP >= 100) {
-          clearInterval(intervalRef.current);
-          if (!isDoneRef.current) {
-            isDoneRef.current = true;
-            setTimeout(onNext, 800); 
-          }
-          return 100;
-        }
-        return nextP;
-      });
-    }, 30);
-  };
-
-  const stopHold = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    if (!isDoneRef.current && progress < 100) {
-      setProgress(0); 
-    }
-  };
-
-  const t = progress / 100;
-  const p0 = { x: 700, y: 145 }; // Кемерово
-  const p1 = { x: 490, y: 40 };  
-  const p2 = { x: 290, y: 250 }; // Ереван
-
-  const planeX = Math.pow(1 - t, 2) * p0.x + 2 * (1 - t) * t * p1.x + Math.pow(t, 2) * p2.x;
-  const planeY = Math.pow(1 - t, 2) * p0.y + 2 * (1 - t) * t * p1.y + Math.pow(t, 2) * p2.y;
-  
-  const dx = 2 * (1 - t) * (p1.x - p0.x) + 2 * t * (p2.x - p1.x);
-  const dy = 2 * (1 - t) * (p1.y - p0.y) + 2 * t * (p2.y - p1.y);
-  // Lucide Plane icon points diagonally up-right natively. 
-  // We need to adjust the angle so it points correctly along the path.
-  // When dx,dy points left-down, we add offset so it looks forward.
-  const angle = Math.atan2(dy, dx) * (180 / Math.PI) + 45;
-
-  return (
-    <div className="quest-container animate-blur-fade text-center w-full max-w-4xl">
-      <h2 className="font-heading text-xl text-rose-400 mb-2 tracking-widest uppercase text-sm">Глава 2</h2>
-      <h3 className="font-heading text-3xl md:text-4xl font-medium mb-4 text-gray-700">
-        Сквозь километры
-      </h3>
-      <p className="text-lg text-gray-500 mb-8 max-w-lg mx-auto leading-relaxed">
-        Удерживай кнопку, чтобы наш самолет пролетел эти 3 700 км... Знаешь, что сильнее любого расстояния? Наша любовь.
-      </p>
-      
-      <div className="relative w-full max-w-2xl mx-auto mb-10 bg-white/40 rounded-[2rem] p-3 sm:p-6 shadow-sm border border-white/80 backdrop-blur-md">
-        <svg viewBox="200 10 560 300" className="w-full h-auto drop-shadow-sm">
-          <path d="M700,145 Q490,40 290,250" fill="none" stroke="rgba(244,143,177,0.3)" strokeWidth="6" strokeLinecap="round" strokeDasharray="12 12" />
-          <path d="M700,145 Q490,40 290,250" fill="none" stroke="#f48fb1" strokeWidth="8" strokeLinecap="round" pathLength="100" strokeDasharray="100" strokeDashoffset={100 - progress} className="transition-all duration-75 ease-linear" />
-          <circle cx="290" cy="250" r="12" fill="rgba(244,143,177,0.4)" className="animate-breathe" />
-          <circle cx="290" cy="250" r="6" fill="#f48fb1" />
-          <text x="290" y="290" textAnchor="middle" fill="#5a4b56" fontSize="24" fontFamily="Inter" fontWeight="600">Ереван</text>
-          <circle cx="700" cy="145" r="12" fill="rgba(255,182,193,0.4)" className="animate-breathe" />
-          <circle cx="700" cy="145" r="6" fill="#ffb6c1" />
-          <text x="700" y="185" textAnchor="middle" fill="#5a4b56" fontSize="24" fontFamily="Inter" fontWeight="600">Кемерово</text>
-          {/* Самолетик */}
-          <g transform={`translate(${planeX}, ${planeY}) rotate(${angle})`} className="transition-all duration-75 ease-linear">
-            {/* Тень самолета для 3D эффекта */}
-            <Plane width="40" height="40" x="-20" y="-20" className="text-rose-900 opacity-10" style={{ filter: 'blur(4px)', transform: 'translate(0px, 10px)' }} />
-            {/* Сам самолет */}
-            <Plane width="40" height="40" x="-20" y="-20" className="text-rose-500 drop-shadow-lg" fill="currentColor" />
-          </g>
-        </svg>
-      </div>
-
-      <button
-        onMouseDown={startHold}
-        onMouseUp={stopHold}
-        onMouseLeave={stopHold}
-        onTouchStart={(e) => { e.preventDefault(); startHold(e); }}
-        onTouchEnd={(e) => { e.preventDefault(); stopHold(e); }}
-        className="glass relative overflow-hidden px-8 py-5 sm:px-14 sm:py-6 rounded-full text-rose-500 uppercase tracking-widest cursor-pointer select-none transition-transform active:scale-95 shadow-sm active:shadow-inner"
-      >
-        <span className="relative z-10 font-bold text-sm sm:text-base">Нажми и удерживай</span>
-        <div className="hold-progress-bg" style={{ width: `${progress}%` }} />
-      </button>
-    </div>
-  );
-}
-
-// ─── Шаг 4: Ужин (Выбор еды) ────────────────────────────────────────
-function Step4({ onNext }) {
-  const [errorIndex, setErrorIndex] = useState(null);
-  
-  const items = [
-    { id: 'sushi', name: 'Роллы', img: '/images/sushi.png', correct: false },
-    { id: 'pizza', name: 'Пиццу', img: '/images/pizza.png', correct: false },
-    { id: 'sweets', name: 'Вкусняшки', img: '/images/sweets.png', correct: false },
-    { id: 'wendys', name: 'Комбо Wendy\'s', img: '/images/wendys_combo.png', correct: true },
-  ];
-
-  const handleAnswer = (index, isCorrect) => {
-    if (isCorrect) {
-      onNext();
-    } else {
-      setErrorIndex(index);
-      setTimeout(() => setErrorIndex(null), 500);
-    }
-  };
-
-  return (
-    <div className="quest-container animate-blur-fade text-center">
-      <h2 className="font-heading text-xl text-rose-400 mb-4 tracking-widest uppercase text-sm">Глава 3</h2>
-      <h3 className="font-heading text-3xl md:text-4xl font-medium mb-6 text-gray-700">
-        Идеальный ужин
-      </h3>
-      <p className="text-lg text-gray-500 mb-12 max-w-lg mx-auto leading-relaxed">
-        Мы долго летели, и пора бы перекусить! Как думаешь, что именно мы закажем на наш идеальный вечер?
-      </p>
-      
-      <div className="grid grid-cols-2 gap-4 max-w-md w-full mx-auto mb-12">
-        {items.map((item, i) => (
-          <button
-            key={item.id}
-            onClick={() => handleAnswer(i, item.correct)}
-            className={`glass-btn p-4 rounded-3xl flex flex-col items-center justify-center gap-3 transition-all duration-300 shadow-sm md:hover:shadow-md active:scale-95 ${
-              errorIndex === i ? 'animate-shake-soft selected-choice' : 'active:bg-rose-50'
-            }`}
-          >
-            <img src={item.img} alt={item.name} className="w-24 h-24 object-contain drop-shadow-md" />
-            <span className="text-sm font-medium text-gray-600">{item.name}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── Шаг 5: Сериал Клон (НОВОЕ) ─────────────────────────────
-function Step5({ onNext, pauseMusic }) {
-  const [errorIndex, setErrorIndex] = useState(null);
-  const [showVideo, setShowVideo] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isVideoMuted, setIsVideoMuted] = useState(true);
-  const videoRef = useRef(null);
-
-  const handleAnswer = (index, isCorrect) => {
-    if (isCorrect) {
-      setShowVideo(true); 
-    } else {
-      setErrorIndex(index);
-      setTimeout(() => setErrorIndex(null), 500);
-    }
-  };
-
-  const handlePlay = () => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = 14; // Запускаем строго с 0:14
-      videoRef.current.play();
-      setIsPlaying(true);
-    }
-  };
-
-  const answers = [
-    { text: "Скучные новости", correct: false, icon: <Newspaper className="w-8 h-8" /> },
-    { text: "Какой-то новый фильм", correct: false, icon: <Film className="w-8 h-8" /> },
-    { text: "Сериал «Клон»", correct: true, icon: <Tv className="w-8 h-8" /> },
-  ];
-
-  if (showVideo) {
-    return (
-      <div className="quest-container animate-blur-fade text-center w-full max-w-4xl">
-        <h2 className="font-heading text-xl text-rose-400 mb-6 tracking-widest uppercase text-sm">Тот самый момент</h2>
-        
-        <div className="w-full max-w-2xl mx-auto bg-white/40 p-4 rounded-3xl shadow-sm border border-white/80 backdrop-blur-md mb-10">
-          <div className="relative w-full overflow-hidden rounded-2xl bg-black/5 shadow-inner flex items-center justify-center min-h-[300px]">
-            {/* Локальное видео. Controls удалены, чтобы нельзя было мотать */}
-            <video 
-              ref={videoRef}
-              className="w-full h-auto max-h-[60vh] object-contain cursor-pointer"
-              src="/videos/sa.mp4#t=14" 
-              playsInline
-              muted={isVideoMuted}
-              onEnded={() => setIsPlaying(false)}
-              onClick={() => {
-                if (videoRef.current && isPlaying) {
-                  videoRef.current.pause();
-                  setIsPlaying(false);
-                }
-              }}
-            >
-              Ваш браузер не поддерживает воспроизведение видео.
-            </video>
-
-            {/* Кнопка включения звука видео */}
-            {isPlaying && (
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (isVideoMuted) {
-                    setIsVideoMuted(false);
-                    pauseMusic();
-                  } else {
-                    setIsVideoMuted(true);
-                  }
-                }}
-                className="absolute bottom-4 right-4 bg-black/40 p-3 rounded-full text-white backdrop-blur-md hover:bg-black/60 transition-colors z-20 shadow-lg"
-              >
-                {isVideoMuted ? <VolumeX className="w-5 h-5 text-gray-300" /> : <Volume2 className="w-5 h-5 text-rose-400" />}
-              </button>
-            )}
-
-            {/* Кастомная кнопка Play */}
-            {!isPlaying && (
-              <div 
-                className="absolute inset-0 bg-black/20 flex items-center justify-center cursor-pointer hover:bg-black/30 transition-colors"
-                onClick={handlePlay}
-              >
-                <div className="w-20 h-20 bg-white/80 rounded-full flex items-center justify-center text-rose-500 backdrop-blur-md shadow-[0_0_20px_rgba(255,255,255,0.6)] animate-breathe">
-                  <svg className="w-10 h-10 ml-2" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z" /></svg>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <button 
-          onClick={onNext} 
-          className="glass-btn px-14 py-5 rounded-full text-rose-500 uppercase tracking-widest text-sm font-bold transition-transform hover:scale-105 active:scale-95 shadow-[0_10px_40px_rgba(244,143,177,0.2)]"
-        >
-          Продолжить ♥️
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="quest-container animate-blur-fade text-center">
-      <h2 className="font-heading text-xl text-rose-400 mb-4 tracking-widest uppercase text-sm">Глава 4</h2>
-      <h3 className="font-heading text-3xl md:text-4xl font-medium mb-6 text-gray-700">
-        Уютный вечер
-      </h3>
-      <p className="text-lg text-gray-500 mb-12 max-w-lg mx-auto leading-relaxed">
-        Ужин из Wendy's готов! Но что мы будем смотреть, уютно устроившись рядышком под пледом?
-      </p>
-      <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
-        {answers.map((ans, i) => (
-          <button
-            key={i}
-            onClick={() => handleAnswer(i, ans.correct)}
-            className={`glass-btn p-5 rounded-2xl flex items-center justify-center gap-4 transition-all text-gray-600 font-medium text-lg shadow-sm md:hover:shadow-md active:scale-[0.98] ${
-              errorIndex === i ? 'animate-shake-soft selected-choice text-rose-500' : 'active:bg-rose-50'
-            }`}
-          >
-            <span className="text-rose-400 drop-shadow-sm">{ans.icon}</span>
-            <span>{ans.text}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── Шаг 6: Каскад и Цахкадзор (НОВОЕ) ──────────────────────
-function Step6({ onNext }) {
-  const [selected, setSelected] = useState([]);
-  
-  const toggleSelect = (id) => {
-    if (selected.includes(id)) {
-      setSelected(selected.filter(i => i !== id));
-    } else {
-      setSelected([...selected, id]);
-    }
-  };
-
-  const checkAnswer = () => {
-    if (selected.length === 2) {
-      onNext();
-    } else {
-      alert("Подумай хорошенько... А зачем нам выбирать что-то одно? 😉");
-    }
-  };
-
-  return (
-    <div className="quest-container animate-blur-fade text-center">
-      <h2 className="font-heading text-xl text-rose-400 mb-4 tracking-widest uppercase text-sm">Глава 5</h2>
-      <h3 className="font-heading text-3xl md:text-4xl font-medium mb-6 text-gray-700">
-        Планы на будущее
-      </h3>
-      <p className="text-lg text-gray-500 mb-12 max-w-lg mx-auto leading-relaxed">
-        Куда мы отправимся первым делом, когда наконец будем вместе?
-      </p>
-      
-      <div className="grid grid-cols-2 gap-6 max-w-lg w-full mx-auto mb-12">
-        <button
-          onClick={() => toggleSelect('cascade')}
-          className={`glass-btn p-4 rounded-3xl flex flex-col items-center gap-4 transition-all duration-300 ${
-            selected.includes('cascade') ? 'selected-choice' : ''
-          }`}
-        >
-          <img src="/images/cascade.png" alt="Закаты на Каскаде" className="w-full aspect-square object-cover rounded-2xl shadow-sm border border-white/50" />
-          <span className="text-sm font-medium text-gray-600 leading-tight">Закаты на Каскаде</span>
-        </button>
-
-        <button
-          onClick={() => toggleSelect('ropeway')}
-          className={`glass-btn p-4 rounded-3xl flex flex-col items-center gap-4 transition-all duration-300 ${
-            selected.includes('ropeway') ? 'selected-choice' : ''
-          }`}
-        >
-          <img src="/images/ropeway.png" alt="Канатка в Цахкадзоре" className="w-full aspect-square object-cover rounded-2xl shadow-sm border border-white/50" />
-          <span className="text-sm font-medium text-gray-600">Канатка в Цахкадзоре</span>
-        </button>
-      </div>
-
-      <button 
-        onClick={checkAnswer} 
-        className={`glass-btn px-12 py-4 rounded-full text-rose-500 uppercase tracking-widest text-sm font-bold transition-all duration-500 ${selected.length > 0 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
-      >
-        Подтвердить выбор
-      </button>
-    </div>
-  );
-}
-
-// ─── Шаг 7: Предфинал ──────────────────────────────────────
-function Step7({ onNext }) {
-  return (
-    <div className="quest-container animate-blur-fade text-center">
-      <h2 className="font-heading text-xl text-rose-400 mb-4 tracking-widest uppercase text-sm">Глава 6</h2>
-      <h3 className="font-heading text-4xl md:text-5xl font-medium mb-8 text-gray-700">
-        Наше Будущее
-      </h3>
-      <p className="text-xl text-gray-500 mb-16 max-w-2xl mx-auto leading-relaxed">
-        Впереди нас ждет еще множество вечеров с сериалом, долгих прогулок и целая вечность вместе... <br/><br/>
-        Готова увидеть самое главное?
-      </p>
-      <button onClick={onNext} className="glass px-16 py-6 rounded-full text-rose-500 uppercase tracking-widest font-bold transition-transform animate-breathe bg-white/80">
-        Да, готова ♥️
-      </button>
-    </div>
-  );
-}
-
-// ─── Финал: Подарок и Фото ─────────────────────────────────
-function Step8() {
-  const [opened, setOpened] = useState(false);
-
-  return (
-    <div className="quest-container animate-blur-fade text-center">
-
-      
-      {!opened ? (
-        <div className="cursor-pointer group mt-10" onClick={() => setOpened(true)}>
-          <div className="animate-gift-bounce">
-            <Gift className="w-32 h-32 text-rose-400 mx-auto drop-shadow-[0_20px_40px_rgba(244,143,177,0.6)] group-hover:scale-110 transition-transform" />
-          </div>
-          <p className="mt-12 text-rose-400 tracking-widest uppercase text-sm animate-breathe font-bold">Нажми на подарок</p>
-        </div>
-      ) : (
-        <div className="relative animate-photo-3d mt-4">
-          {/* Полароидная рамка для фото (теперь адаптируется под размер фотки) */}
-          <div className="bg-white p-5 pb-20 rounded-sm shadow-[0_30px_60px_rgba(156,142,152,0.3)] inline-block mx-auto border border-gray-100 max-w-sm w-full">
-            <div className="w-full bg-gray-100 overflow-hidden flex flex-col items-center justify-center relative shadow-inner">
-              {/* Фотография (us.jpg) - h-auto позволяет рамке подстроиться под высоту фото */}
-              <img 
-                src="/images/us.jpg" 
-                alt="Мы" 
-                className="w-full h-auto object-contain z-10 relative" 
-                onError={(e) => { e.target.style.display = 'none'; }} 
-              />
-              
-              <div className="absolute inset-0 flex flex-col items-center justify-center z-0 opacity-50">
-                <Camera className="w-12 h-12 text-rose-200 mb-3" />
-                <p className="text-gray-400 text-xs text-center px-6 font-body">
-                  Закинь вашу реальную фотографию сюда:<br/><br/>
-                  <code className="bg-gray-200 px-2 py-1 rounded text-gray-600">public/images/us.jpg</code>
-                </p>
-              </div>
-            </div>
-            {/* Подпись на полароиде */}
-            <p className="absolute bottom-12 left-0 right-0 text-center text-gray-700 font-hand text-3xl font-bold">
-              Моя принцесса
+      {secretUnlocked && (
+        <div className="absolute inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-blur-fade pointer-events-auto overflow-y-auto">
+          <div className="premium-glass p-6 sm:p-8 rounded-3xl max-w-sm w-full text-center relative animate-pop-up border border-rose-400/30 shadow-[0_0_50px_rgba(255,107,158,0.2)] m-auto">
+            <button onClick={() => setSecretUnlocked(false)} className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors p-2">
+              <X size={20} />
+            </button>
+            <Sparkles className="w-10 h-10 sm:w-12 sm:h-12 text-rose-400 mx-auto mb-4 animate-pulse-ring rounded-full" />
+            <h2 className="font-heading text-xl sm:text-2xl font-bold mb-4 text-white drop-shadow-md">Созвездие Открыто!</h2>
+            <p className="text-rose-100/90 font-body text-xs sm:text-sm leading-relaxed mb-6">
+              Расстояние в 3700 км не имеет значения, когда наши руки тянутся друг к другу.<br/><br/>
+              <span className="font-hand text-xl sm:text-2xl text-rose-300 rotate-[-2deg] inline-block mt-2">Только моя принцесса ❤️</span>
             </p>
+            <button onClick={() => setSecretUnlocked(false)} className="premium-btn w-full py-3 rounded-xl text-white text-xs sm:text-sm font-bold tracking-wider">
+              Продолжить магию
+            </button>
           </div>
-          <p className="mt-16 text-rose-400 font-heading italic text-2xl drop-shadow-sm">Ты — моё самое большое счастье.</p>
         </div>
       )}
     </div>
@@ -631,43 +314,139 @@ function Step8() {
 
 // ─── Главное Приложение ────────────────────────────────────
 export default function App() {
-  const [step, setStep] = useState(1);
   const [isMusicPlaying, setIsMusicPlaying] = useState(true);
+  const [peer, setPeer] = useState(null);
+  const [connection, setConnection] = useState(null);
+  const [peerId, setPeerId] = useState('');
+  const [remotePeerId, setRemotePeerId] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [error, setError] = useState('');
+  const [isHost, setIsHost] = useState(true); 
 
-  const nextStep = () => {
-    if (step === 1 && !isMusicPlaying) {
-      setIsMusicPlaying(true);
+  useEffect(() => {
+    try {
+      const id = 'vika-sv-love-' + Math.random().toString(36).substring(2, 6);
+      const newPeer = new Peer(id);
+      
+      newPeer.on('open', (id) => setPeerId(id));
+
+      newPeer.on('connection', (conn) => {
+        setIsHost(true);
+        conn.on('open', () => setConnection(conn));
+        conn.on('close', () => setConnection(null));
+      });
+      
+      newPeer.on('error', (err) => {
+        setError('Ошибка сети. Проверьте интернет.');
+        setIsConnecting(false);
+      });
+
+      setPeer(newPeer);
+      return () => newPeer.destroy();
+    } catch (e) {
+      console.error(e);
+      setError('Ошибка сети.');
     }
-    setStep(s => s + 1);
+  }, []);
+
+  const handleConnect = () => {
+    if (peer && remotePeerId) {
+      setIsConnecting(true);
+      setError('');
+      try {
+        const conn = peer.connect(remotePeerId);
+        setIsHost(false);
+        
+        conn.on('open', () => {
+          setConnection(conn);
+          setIsConnecting(false);
+        });
+        conn.on('error', () => {
+          setError('Связь прервалась.');
+          setIsConnecting(false);
+        });
+        conn.on('close', () => setConnection(null));
+      } catch (e) {
+         setError('Не удалось создать канал.');
+         setIsConnecting(false);
+      }
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(peerId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <div className="min-h-screen text-text-main overflow-x-hidden relative font-body selection:bg-rose-200 flex flex-col">
-      <div className="magic-bg fixed inset-0 z-0" />
-      <div className="fixed inset-0 z-0 pointer-events-none"><MagicParticles /></div>
+    <div className="w-full min-h-[100dvh] text-white relative font-body flex flex-col bg-[#080614] overflow-x-hidden">
       
-      <main className="relative z-10 w-full flex-grow flex items-center justify-center py-10 px-4 sm:px-8">
-        {step === 1 && <Step1 onNext={nextStep} />}
-        {step === 2 && <Step2 onNext={nextStep} />}
-        {step === 3 && <Step3 onNext={nextStep} />}
-        {step === 4 && <Step4 onNext={nextStep} />}
-        {step === 5 && <Step5 onNext={nextStep} pauseMusic={() => setIsMusicPlaying(false)} />}
-        {step === 6 && <Step6 onNext={nextStep} />}
-        {step === 7 && <Step7 onNext={nextStep} />}
-        {step === 8 && <Step8 />}
-      </main>
-
-      {/* Таймер вместе (Слева) */}
-      <TimeCounter />
-
-      {/* Музыкальный плеер (Справа) */}
-      <div className="opacity-100 transition-opacity duration-1000 z-50">
-        <MusicPlayer 
-          isPlaying={isMusicPlaying} 
-          toggleMusic={() => setIsMusicPlaying(!isMusicPlaying)} 
-          setMusicState={setIsMusicPlaying}
-        />
+      {/* ── Общий слой UI поверх всего (Таймер и Музыка) ── */}
+      <div className="fixed top-0 left-0 right-0 z-[9999] pointer-events-none p-4 sm:p-6 pb-0 pt-[calc(env(safe-area-inset-top,1rem)+1rem)] flex justify-between items-start">
+         <TimeCounter />
+         <MusicPlayer isPlaying={isMusicPlaying} toggleMusic={() => setIsMusicPlaying(!isMusicPlaying)} setMusicState={setIsMusicPlaying} />
       </div>
+
+      {/* ── Состояние 1: Экран Холста ── */}
+      {connection ? (
+        <SharedCanvas connection={connection} onDisconnect={() => setConnection(null)} isHost={isHost} />
+      ) : (
+        /* ── Состояние 2: Лобби (Скроллируемое на мобилках) ── */
+        <>
+          <div className="premium-bg fixed inset-0 z-0 pointer-events-none" />
+          <MagicParticles />
+          
+          <main className="relative z-10 w-full flex-grow flex items-center justify-center p-4 pt-32 pb-[env(safe-area-inset-bottom,2rem)]">
+            <div className="premium-glass p-6 sm:p-8 rounded-[2rem] w-full max-w-sm animate-blur-fade flex flex-col items-center">
+              
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-5 shadow-[0_0_30px_rgba(255,107,158,0.2)]">
+                <MessageCircleHeart className="w-7 h-7 sm:w-8 sm:h-8 text-rose-400" />
+              </div>
+              
+              <h1 className="font-heading text-2xl sm:text-3xl font-bold mb-2 text-white text-center drop-shadow-md">
+                Живое Касание
+              </h1>
+              <p className="text-white/60 mb-6 text-center text-xs sm:text-sm px-2 leading-relaxed font-light">
+                Мост через 3 700 км. Отправь код половинке, чтобы прикоснуться сквозь экран.
+              </p>
+
+              <div className="w-full bg-black/20 p-4 sm:p-5 rounded-2xl border border-white/5 mb-6 relative group">
+                <p className="text-[9px] sm:text-[10px] text-rose-200/50 uppercase tracking-widest font-bold mb-3 text-center">Твой личный код</p>
+                <div className="flex items-center justify-between gap-3 bg-white/5 rounded-xl p-1 pl-4 border border-white/10">
+                  <span className="text-xs sm:text-sm font-mono text-rose-300 font-medium tracking-wide truncate">
+                    {peerId || '...'}
+                  </span>
+                  <button onClick={copyToClipboard} className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-rose-500/20 hover:bg-rose-500/40 text-rose-300 flex items-center justify-center transition-all shrink-0">
+                    {copied ? <Check size={16} /> : <Copy size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="w-full flex flex-col gap-3">
+                <input 
+                  type="text" 
+                  placeholder="Введи её код..." 
+                  value={remotePeerId}
+                  onChange={(e) => setRemotePeerId(e.target.value)}
+                  className="w-full px-4 sm:px-5 py-3 sm:py-4 rounded-xl border border-white/10 bg-black/30 text-white text-center text-xs sm:text-sm focus:outline-none focus:border-rose-400/50 focus:bg-black/50 transition-all font-mono placeholder:text-white/20 placeholder:font-body"
+                />
+                {error && <p className="text-[10px] sm:text-xs text-rose-400 text-center">{error}</p>}
+                
+                <button 
+                  onClick={handleConnect}
+                  disabled={!remotePeerId || isConnecting}
+                  className="premium-btn w-full py-3 sm:py-4 mt-1 rounded-xl text-white uppercase tracking-widest text-[10px] sm:text-xs font-bold disabled:opacity-50"
+                >
+                  {isConnecting ? 'Соединяем...' : 'Прикоснуться'}
+                </button>
+              </div>
+
+            </div>
+          </main>
+        </>
+      )}
     </div>
   );
 }
