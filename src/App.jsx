@@ -326,10 +326,43 @@ export default function App() {
 
   useEffect(() => {
     try {
-      const id = 'vika-sv-love-' + Math.random().toString(36).substring(2, 6);
-      const newPeer = new Peer(id);
+      // Спасаем ID при перезагрузке вкладки (часто бывает на iOS при сворачивании браузера)
+      let savedId = sessionStorage.getItem('myPeerId');
+      if (!savedId) {
+        savedId = 'vika-sv-love-' + Math.random().toString(36).substring(2, 6);
+        sessionStorage.setItem('myPeerId', savedId);
+      }
       
-      newPeer.on('open', (id) => setPeerId(id));
+      // Использование публичных STUN и бесплатных TURN серверов для обхода VPN / строгих NAT
+      const newPeer = new Peer(savedId, {
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:global.stun.twilio.com:3478' },
+            {
+              urls: "turn:openrelay.metered.ca:80",
+              username: "openrelayproject",
+              credential: "openrelayproject"
+            },
+            {
+              urls: "turn:openrelay.metered.ca:443",
+              username: "openrelayproject",
+              credential: "openrelayproject"
+            },
+            {
+              urls: "turn:openrelay.metered.ca:443?transport=tcp",
+              username: "openrelayproject",
+              credential: "openrelayproject"
+            }
+          ]
+        }
+      });
+      
+      newPeer.on('open', (id) => {
+        setPeerId(id);
+        setError(''); // Очищаем ошибку при успешном коннекте к серверу
+      });
 
       newPeer.on('connection', (conn) => {
         setIsHost(true);
@@ -337,8 +370,23 @@ export default function App() {
         conn.on('close', () => setConnection(null));
       });
       
+      // Авто-переподключение, если iOS "усыпил" браузер пока ты копировал код в WhatsApp
+      newPeer.on('disconnected', () => {
+        console.log("Disconnected from server, reconnecting...");
+        if (!newPeer.destroyed) {
+          newPeer.reconnect();
+        }
+      });
+      
       newPeer.on('error', (err) => {
-        setError('Ошибка сети. Проверьте интернет.');
+        // Ошибка "unavailable-id" значит вкладка дублируется, или старый коннект еще висит
+        if (err.type === 'unavailable-id') {
+           // Генерируем новый, если старый залип на сервере
+           sessionStorage.removeItem('myPeerId');
+           setError('Сессия зависла. Обновите страницу.');
+        } else {
+           setError('Ошибка сети: ' + err.type);
+        }
         setIsConnecting(false);
       });
 
